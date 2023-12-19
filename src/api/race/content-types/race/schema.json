@@ -1,0 +1,26 @@
+{
+  "kind": "collectionType",
+  "collectionName": "races",
+  "info": {
+    "singularName": "race",
+    "pluralName": "races",
+    "displayName": "Race",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "race_name": {
+      "type": "string",
+      "required": true
+    },
+    "race_start_date": {
+      "type": "datetime"
+    },
+    "race_description": {
+      "type": "blocks"
+    }
+  }
+}
