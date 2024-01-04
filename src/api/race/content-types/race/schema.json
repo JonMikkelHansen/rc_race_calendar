@@ -19,8 +19,40 @@
     "race_start_date": {
       "type": "datetime"
     },
+    "race_end_date": {
+      "type": "datetime"
+    },
     "race_description": {
       "type": "blocks"
+    },
+    "series": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::series.series",
+      "mappedBy": "race"
+    },
+    "season": {
+      "type": "biginteger",
+      "max": "9999",
+      "required": true,
+      "min": "2000"
+    },
+    "external_link": {
+      "type": "string"
+    },
+    "number_of_stages": {
+      "type": "integer",
+      "min": 1,
+      "default": 1
+    },
+    "race_type": {
+      "type": "enumeration",
+      "enum": [
+        "Classic",
+        "Stage Race",
+        "One-day race",
+        "Grand Tour"
+      ]
     }
   }
 }

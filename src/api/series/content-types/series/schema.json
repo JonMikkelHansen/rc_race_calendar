@@ -1,0 +1,29 @@
+{
+  "kind": "collectionType",
+  "collectionName": "serieses",
+  "info": {
+    "singularName": "series",
+    "pluralName": "serieses",
+    "displayName": "Series",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "series_title": {
+      "type": "string",
+      "required": true
+    },
+    "series_description": {
+      "type": "blocks"
+    },
+    "race": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::race.race",
+      "inversedBy": "series"
+    }
+  }
+}

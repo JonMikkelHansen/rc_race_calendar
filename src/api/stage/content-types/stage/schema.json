@@ -1,0 +1,156 @@
+{
+  "kind": "collectionType",
+  "collectionName": "stages",
+  "info": {
+    "singularName": "stage",
+    "pluralName": "stages",
+    "displayName": "Stage",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "race": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::race.race"
+    },
+    "stage_date": {
+      "type": "datetime",
+      "required": true
+    },
+    "stage_title": {
+      "type": "string"
+    },
+    "stage_description_short": {
+      "type": "blocks"
+    },
+    "stage_type_primary": {
+      "type": "enumeration",
+      "enum": [
+        "Mountain",
+        "Hilly",
+        "TTT (Team Time Trial)",
+        "ITT (Individual Time Trial)",
+        "Flat"
+      ]
+    },
+    "stage_type_secondary": {
+      "type": "enumeration",
+      "enum": [
+        "Cobblestone",
+        "Sprint",
+        "Mountain Summit Finish"
+      ]
+    },
+    "key_stage": {
+      "type": "boolean",
+      "default": false
+    },
+    "stage_start": {
+      "type": "string"
+    },
+    "stage_finish": {
+      "type": "string"
+    },
+    "stage_difficulty": {
+      "type": "enumeration",
+      "enum": [
+        "One",
+        "Two",
+        "Three",
+        "Four",
+        "Five"
+      ]
+    },
+    "stage_distance": {
+      "type": "decimal"
+    },
+    "country": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "stage_description_ext_01": {
+      "type": "richtext"
+    },
+    "stage_description_ext_02": {
+      "type": "richtext"
+    },
+    "rc_stage_description_long": {
+      "type": "blocks"
+    },
+    "rc_stage_description_short": {
+      "type": "blocks"
+    },
+    "rc_stage_description_vo_script": {
+      "type": "blocks"
+    },
+    "rc_stage_description_vo_sound": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "rc_stage_preview_video": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "gpx_file_ext_link": {
+      "type": "string"
+    },
+    "gpx_file": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "files"
+      ]
+    },
+    "image_prompt_01": {
+      "type": "richtext"
+    },
+    "image_prompt_02": {
+      "type": "richtext"
+    },
+    "image_prompt_03": {
+      "type": "richtext"
+    },
+    "generated_images": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "generated_videos": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": true
+    }
+  }
+}

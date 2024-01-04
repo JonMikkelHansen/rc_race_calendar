@@ -362,31 +362,6 @@ export interface AdminTransferTokenPermission extends Schema.CollectionType {
   };
 }
 
-export interface ApiRaceRace extends Schema.CollectionType {
-  collectionName: 'races';
-  info: {
-    singularName: 'race';
-    pluralName: 'races';
-    displayName: 'Race';
-    description: '';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    race_name: Attribute.String & Attribute.Required;
-    race_start_date: Attribute.DateTime;
-    race_description: Attribute.Blocks;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<'api::race.race', 'oneToOne', 'admin::user'> &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<'api::race.race', 'oneToOne', 'admin::user'> &
-      Attribute.Private;
-  };
-}
-
 export interface PluginUploadFile extends Schema.CollectionType {
   collectionName: 'files';
   info: {
@@ -702,6 +677,158 @@ export interface PluginI18NLocale extends Schema.CollectionType {
   };
 }
 
+export interface ApiRaceRace extends Schema.CollectionType {
+  collectionName: 'races';
+  info: {
+    singularName: 'race';
+    pluralName: 'races';
+    displayName: 'Race';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    race_name: Attribute.String & Attribute.Required;
+    race_start_date: Attribute.DateTime;
+    race_end_date: Attribute.DateTime;
+    race_description: Attribute.Blocks;
+    series: Attribute.Relation<
+      'api::race.race',
+      'oneToMany',
+      'api::series.series'
+    >;
+    season: Attribute.BigInteger &
+      Attribute.Required &
+      Attribute.SetMinMax<{
+        min: '2000';
+        max: '9999';
+      }>;
+    external_link: Attribute.String;
+    number_of_stages: Attribute.Integer &
+      Attribute.SetMinMax<{
+        min: 1;
+      }> &
+      Attribute.DefaultTo<1>;
+    race_type: Attribute.Enumeration<
+      ['Classic', 'Stage Race', 'One-day race', 'Grand Tour']
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<'api::race.race', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<'api::race.race', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+  };
+}
+
+export interface ApiSeriesSeries extends Schema.CollectionType {
+  collectionName: 'serieses';
+  info: {
+    singularName: 'series';
+    pluralName: 'serieses';
+    displayName: 'Series';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    series_title: Attribute.String & Attribute.Required;
+    series_description: Attribute.Blocks;
+    race: Attribute.Relation<
+      'api::series.series',
+      'manyToOne',
+      'api::race.race'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::series.series',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::series.series',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
+export interface ApiStageStage extends Schema.CollectionType {
+  collectionName: 'stages';
+  info: {
+    singularName: 'stage';
+    pluralName: 'stages';
+    displayName: 'Stage';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    race: Attribute.Relation<'api::stage.stage', 'oneToOne', 'api::race.race'>;
+    stage_date: Attribute.DateTime & Attribute.Required;
+    stage_title: Attribute.String;
+    stage_description_short: Attribute.Blocks;
+    stage_type_primary: Attribute.Enumeration<
+      [
+        'Mountain',
+        'Hilly',
+        'TTT (Team Time Trial)',
+        'ITT (Individual Time Trial)',
+        'Flat'
+      ]
+    >;
+    stage_type_secondary: Attribute.Enumeration<
+      ['Cobblestone', 'Sprint', 'Mountain Summit Finish']
+    >;
+    key_stage: Attribute.Boolean & Attribute.DefaultTo<false>;
+    stage_start: Attribute.String;
+    stage_finish: Attribute.String;
+    stage_difficulty: Attribute.Enumeration<
+      ['One', 'Two', 'Three', 'Four', 'Five']
+    >;
+    stage_distance: Attribute.Decimal;
+    country: Attribute.String;
+    region: Attribute.String;
+    stage_description_ext_01: Attribute.RichText;
+    stage_description_ext_02: Attribute.RichText;
+    rc_stage_description_long: Attribute.Blocks;
+    rc_stage_description_short: Attribute.Blocks;
+    rc_stage_description_vo_script: Attribute.Blocks;
+    rc_stage_description_vo_sound: Attribute.Media;
+    rc_stage_preview_video: Attribute.Media;
+    gpx_file_ext_link: Attribute.String;
+    gpx_file: Attribute.Media;
+    image_prompt_01: Attribute.RichText;
+    image_prompt_02: Attribute.RichText;
+    image_prompt_03: Attribute.RichText;
+    generated_images: Attribute.Media;
+    generated_videos: Attribute.Media;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::stage.stage',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::stage.stage',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 declare module '@strapi/types' {
   export module Shared {
     export interface ContentTypes {
@@ -712,13 +839,15 @@ declare module '@strapi/types' {
       'admin::api-token-permission': AdminApiTokenPermission;
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
-      'api::race.race': ApiRaceRace;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;
       'plugin::users-permissions.permission': PluginUsersPermissionsPermission;
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
       'plugin::i18n.locale': PluginI18NLocale;
+      'api::race.race': ApiRaceRace;
+      'api::series.series': ApiSeriesSeries;
+      'api::stage.stage': ApiStageStage;
     }
   }
 }
