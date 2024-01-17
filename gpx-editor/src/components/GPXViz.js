@@ -1,15 +1,31 @@
 import React from 'react';
+import { Line } from 'react-chartjs-2';
+import 'chart.js/auto';
 
 const GPXViz = ({ gpxData }) => {
-  if (!gpxData) {
-    return <div>Loading or no data available...</div>;
+  if (!gpxData || !gpxData.tracks || !gpxData.tracks[0].segments || !gpxData.tracks[0].segments[0]) {
+    return <div>No track data available.</div>;
   }
 
-  // Placeholder content, replace with actual visualization later
+  const trackPoints = gpxData.tracks[0].segments[0];
+  const labels = trackPoints.map((_, index) => index); // Index as placeholder labels
+  const elevationData = trackPoints.map(point => point.elevation);
+
+  const data = {
+    labels: labels,
+    datasets: [{
+      label: 'Elevation',
+      data: elevationData,
+      fill: false,
+      borderColor: 'rgb(75, 192, 192)',
+      tension: 0.1
+    }]
+  };
+
   return (
     <div>
-      <h2>GPX Visualization</h2>
-      <p>Data is loaded, but visualization is not yet implemented.</p>
+      <h2>Height Profile</h2>
+      <Line data={data} />
     </div>
   );
 };
