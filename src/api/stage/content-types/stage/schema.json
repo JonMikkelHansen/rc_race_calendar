@@ -143,14 +143,24 @@
       ]
     },
     "generated_videos": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
       "allowedTypes": [
         "images",
         "files",
         "videos",
         "audios"
-      ],
-      "type": "media",
-      "multiple": true
+      ]
+    },
+    "external_link": {
+      "type": "string"
+    },
+    "gpx": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::gpx.gpx",
+      "mappedBy": "stage"
     }
   }
 }

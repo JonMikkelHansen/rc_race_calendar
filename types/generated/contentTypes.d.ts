@@ -677,6 +677,32 @@ export interface PluginI18NLocale extends Schema.CollectionType {
   };
 }
 
+export interface ApiGpxGpx extends Schema.CollectionType {
+  collectionName: 'gpxes';
+  info: {
+    singularName: 'gpx';
+    pluralName: 'gpxes';
+    displayName: 'GPX';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Title: Attribute.String;
+    Description: Attribute.Blocks;
+    GPX: Attribute.Media;
+    stage: Attribute.Relation<'api::gpx.gpx', 'oneToOne', 'api::stage.stage'>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<'api::gpx.gpx', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<'api::gpx.gpx', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+  };
+}
+
 export interface ApiRaceRace extends Schema.CollectionType {
   collectionName: 'races';
   info: {
@@ -811,6 +837,8 @@ export interface ApiStageStage extends Schema.CollectionType {
     image_prompt_03: Attribute.RichText;
     generated_images: Attribute.Media;
     generated_videos: Attribute.Media;
+    external_link: Attribute.String;
+    gpx: Attribute.Relation<'api::stage.stage', 'oneToOne', 'api::gpx.gpx'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -845,6 +873,7 @@ declare module '@strapi/types' {
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
       'plugin::i18n.locale': PluginI18NLocale;
+      'api::gpx.gpx': ApiGpxGpx;
       'api::race.race': ApiRaceRace;
       'api::series.series': ApiSeriesSeries;
       'api::stage.stage': ApiStageStage;
