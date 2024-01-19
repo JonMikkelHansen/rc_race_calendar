@@ -9,6 +9,14 @@ const parseWaypoints = (xmlDoc) => {
 
     for (let i = 0; i < wptElements.length; i++) {
         const wpt = wptElements[i];
+        const nameElement = wpt.getElementsByTagName('name')[0];
+        const name = nameElement?.textContent || 'Unnamed Waypoint';
+
+        // Skip waypoints with names starting with "KM"
+        if (name.startsWith("KM")) {
+            continue;
+        }
+
         const lat = parseFloat(wpt.getAttribute('lat'));
         const lon = parseFloat(wpt.getAttribute('lon'));
 
@@ -21,14 +29,13 @@ const parseWaypoints = (xmlDoc) => {
         }
 
         const elevation = parseFloat(wpt.getElementsByTagName('ele')[0]?.textContent) || null;
-        const name = wpt.getElementsByTagName('name')[0]?.textContent || 'Unnamed Waypoint';
 
         waypoints.push({
+            name: name,
             latitude: lat,
             longitude: lon,
             elevation: elevation,
-            name: name,
-            distanceFromStart: parseFloat((totalDistance / 1000).toFixed(1))
+            distanceFromStart: parseFloat((totalDistance / 1000).toFixed(1)) // Distance in kilometers
         });
 
         lastLat = lat;
