@@ -18,3 +18,13 @@ export const setMaxY = (maxY) => ({
   type: SET_MAXY,
   payload: maxY,
 });
+
+
+//ADDING TRACKPOINTS ARRAY
+export const SET_TRACKPOINTS = 'SET_TRACKPOINTS';
+
+// Action creator for setting trackpoints
+export const setTrackpoints = (trackpoints) => ({
+  type: SET_TRACKPOINTS,
+  payload: trackpoints,
+});

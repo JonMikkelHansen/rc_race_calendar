@@ -1,5 +1,5 @@
 import { calculateHaversineDistance } from '../Utilities';
-import { setMinY, setMaxY } from '../redux/actions/GPXActions';
+import { setMinY, setMaxY, setTrackpoints } from '../redux/actions/GPXActions';
 import store from '../redux/store'; // Adjust this import based on your actual store path
 
 const parseWaypoints = (xmlDoc) => {
@@ -104,8 +104,19 @@ const parseTracks = (xmlDoc) => {
         store.dispatch(setMaxY(Math.ceil(maxY / 100) * 100));
     }
 
+    // After parsing, dispatch the trackpoints
+    const allTrackpoints = tracks.flatMap(track => track.segments.flatMap(segment => segment));
+    store.dispatch(setTrackpoints(allTrackpoints));
+
+    // Continue with existing logic
+    if (minY !== Number.POSITIVE_INFINITY && maxY !== Number.NEGATIVE_INFINITY) {
+        store.dispatch(setMinY(Math.floor(minY / 100) * 100));
+        store.dispatch(setMaxY(Math.ceil(maxY / 100) * 100));
+    }
+
     return tracks;
 };
+
 
 export const parseStandardGPX = (xmlDoc) => {
     return {
