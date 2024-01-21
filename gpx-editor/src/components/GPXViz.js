@@ -15,19 +15,44 @@ const GPXViz = ({ gpxData }) => {
   const [initialYSet, setInitialYSet] = useState(false);
 
   useEffect(() => {
-    if (gpxData.tracks?.[0].segments?.[0]) {
-      const originalTrackPoints = gpxData.tracks[0].segments[0];
-      const simplifiedTrackPoints = douglasPeucker(originalTrackPoints, reduxTolerance);
-      setSimplifiedData(simplifiedTrackPoints);
-    }
+    if (gpxData.tracks) {
+      let allTrackPoints = [];
+      let elevations = [];
+      let totalDistance = 0; // in meters initially
 
-    if (!initialYSet && gpxData.tracks?.[0].segments?.[0]) {
-      const elevations = gpxData.tracks[0].segments[0].map(p => p.elevation);
-      const lowestElevation = Math.floor(Math.min(...elevations) / 100) * 100;
-      const highestElevation = Math.ceil(Math.max(...elevations) / 100) * 100;
-      dispatch(setMinY(lowestElevation));
-      dispatch(setMaxY(highestElevation));
-      setInitialYSet(true);
+      gpxData.tracks.forEach(track => {
+        track.segments.forEach(segment => {
+          let lastLat = null;
+          let lastLon = null;
+
+          const simplifiedSegment = douglasPeucker(segment, reduxTolerance).map(point => {
+            if (lastLat !== null && lastLon !== null) {
+              totalDistance += calculateHaversineDistance(lastLat, lastLon, point.latitude, point.longitude);
+            }
+
+            lastLat = point.latitude;
+            lastLon = point.longitude;
+
+            return { 
+              ...point, 
+              distanceFromStart: totalDistance / 1000 // Convert to kilometers
+            };
+          });
+
+          allTrackPoints.push(...simplifiedSegment);
+          elevations.push(...simplifiedSegment.map(p => p.elevation));
+        });
+      });
+
+      setSimplifiedData(allTrackPoints);
+
+      if (!initialYSet && elevations.length > 0) {
+        const lowestElevation = Math.floor(Math.min(...elevations) / 100) * 100;
+        const highestElevation = Math.ceil(Math.max(...elevations) / 100) * 100;
+        dispatch(setMinY(lowestElevation));
+        dispatch(setMaxY(highestElevation));
+        setInitialYSet(true);
+      }
     }
 
     // Parsing and filtering waypoints
@@ -47,7 +72,7 @@ const GPXViz = ({ gpxData }) => {
 
         return {
           ...wp,
-          distanceFromStart: totalDistance
+          distanceFromStart: totalDistance / 1000 // Convert to kilometers
         };
       });
 
@@ -67,7 +92,7 @@ const GPXViz = ({ gpxData }) => {
     dispatch(setMaxY(Number(e.target.value)));
   };
 
-  const labels = simplifiedData.map((_, index) => index);
+  const labels = simplifiedData.map(point => point.distanceFromStart.toFixed(2));
   const elevationData = simplifiedData.map(point => point.elevation);
 
   const data = {
@@ -87,6 +112,12 @@ const GPXViz = ({ gpxData }) => {
         min: reduxMinY,
         max: reduxMaxY,
       },
+      x: {
+        title: {
+          display: true,
+          text: 'Distance (kilometers)'
+        }
+      }
     },
   };
 
@@ -125,7 +156,7 @@ const GPXViz = ({ gpxData }) => {
       <ul>
         {waypoints.map((wp, index) => (
           <li key={index}>
-            Name: {wp.name}, Elevation: {wp.elevation}m, Distance: {wp.distanceFromStart.toFixed(2)}m
+            Name: {wp.name}, Elevation: {wp.elevation}m, Distance: {wp.distanceFromStart.toFixed(2)}km
           </li>
         ))}
       </ul>
