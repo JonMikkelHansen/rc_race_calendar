@@ -28,34 +28,38 @@ export function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
  * @returns {Array} Simplified array of track points.
  */
 export function douglasPeucker(points, tolerance) {
+  // Base case
   if (points.length <= 2) {
-    return points; // No need to simplify further
+    return points;
   }
 
+  let maxDistance = 0;
+  let index = 0;
   const firstPoint = points[0];
   const lastPoint = points[points.length - 1];
-  const line = { start: firstPoint, end: lastPoint };
-  let maxDistance = 0;
-  let maxIndex = 0;
 
   for (let i = 1; i < points.length - 1; i++) {
-    const point = points[i];
-    const distance = perpendicularDistance(point, line);
+    // Do not consider waypoints for removal
+    if (points[i].isWaypoint) {
+      continue;
+    }
 
+    const distance = perpendicularDistance(points[i], { start: firstPoint, end: lastPoint });
     if (distance > maxDistance) {
       maxDistance = distance;
-      maxIndex = i;
+      index = i;
     }
   }
 
   if (maxDistance > tolerance) {
-    const leftPart = douglasPeucker(points.slice(0, maxIndex + 1), tolerance);
-    const rightPart = douglasPeucker(points.slice(maxIndex), tolerance);
+    const firstHalf = douglasPeucker(points.slice(0, index + 1), tolerance);
+    const secondHalf = douglasPeucker(points.slice(index), tolerance);
 
-    // Combine the simplified parts, including the endpoints
-    return [...leftPart, ...rightPart.slice(1)];
+    // Merge the arrays, ensuring no duplication of the middle point
+    return [...firstHalf.slice(0, -1), ...secondHalf];
   } else {
-    return [firstPoint, lastPoint];
+    // Include all waypoints in the results
+    return [firstPoint, ...points.filter(p => p.isWaypoint), lastPoint];
   }
 }
 
