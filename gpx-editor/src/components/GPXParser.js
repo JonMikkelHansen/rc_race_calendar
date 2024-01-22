@@ -13,16 +13,16 @@ const parseWaypoints = (xmlDoc) => {
         const name = wpt.getElementsByTagName('name')[0]?.textContent || 'Unnamed Waypoint';
         const desc = wpt.getElementsByTagName('desc')[0]?.textContent;
 
-        let waypoint = {
-            latitude: lat,
-            longitude: lon,
-            name: name,
-            description: desc,
-            elevation: undefined,
-            distanceFromStart: undefined
-        };
-
-        waypoints.push(waypoint);
+        if (!isNaN(lat) && !isNaN(lon) && !name.startsWith("KM")) {
+            waypoints.push({
+                latitude: lat,
+                longitude: lon,
+                name: name,
+                description: desc,
+                elevation: undefined,
+                distanceFromStart: undefined
+            });
+        }
     }
 
     return waypoints;

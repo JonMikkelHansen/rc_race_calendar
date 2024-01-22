@@ -49,7 +49,7 @@ const GPXViz = () => {
     dispatch(setMaxY(Number(e.target.value)));
   };
 
-  const labels = simplifiedData.map(point => point.distanceFromStart.toFixed(2));
+  const labels = simplifiedData.map(point => (point.distanceFromStart / 1000).toFixed(1));
   const elevationData = simplifiedData.map(point => point.elevation);
 
   const data = {
