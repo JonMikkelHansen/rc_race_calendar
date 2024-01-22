@@ -15,6 +15,7 @@ const GPXViz = () => {
   const trackpoints = useSelector(state => state.trackpoints);
   const [simplifiedData, setSimplifiedData] = useState([]);
   const [initialYSet, setInitialYSet] = useState(false);
+  const [showOnlyWaypoints, setShowOnlyWaypoints] = useState(false);
 
   useEffect(() => {
     if (trackpoints.length > 0) {
@@ -49,19 +50,25 @@ const GPXViz = () => {
     dispatch(setMaxY(Number(e.target.value)));
   };
 
-  const labels = simplifiedData.map(point => (point.distanceFromStart / 1000).toFixed(1));
-  const elevationData = simplifiedData.map(point => point.elevation);
+  const toggleWaypoints = () => {
+    setShowOnlyWaypoints(!showOnlyWaypoints);
+  };
 
   const data = {
-    labels: labels,
+    labels: simplifiedData.map(point => (point.distanceFromStart / 1000).toFixed(1)),
     datasets: [{
       label: 'Elevation',
-      data: elevationData,
+      data: simplifiedData.map(point => point.elevation),
       fill: false,
       borderColor: 'rgb(75, 192, 192)',
-      tension: reduxTension, // Use tension value from Redux store
+      tension: reduxTension,
+      pointRadius: simplifiedData.map(point => point.isWaypoint || !showOnlyWaypoints ? 3 : 0),
+      // Adjust point radius based on waypoint status and toggle state
     }]
   };
+
+  const labels = simplifiedData.map(point => (point.distanceFromStart / 1000).toFixed(1));
+  const elevationData = simplifiedData.map(point => point.elevation);
 
   const options = {
     scales: {
@@ -82,6 +89,9 @@ const GPXViz = () => {
     <div>
       <h2>Height Profile</h2>
       <Line data={data} options={options} />
+      <button onClick={toggleWaypoints}>
+        {showOnlyWaypoints ? "Show All Points" : "Show Only Waypoints"}
+      </button>
       <div>
         <label>Tolerance:</label>
         <input
