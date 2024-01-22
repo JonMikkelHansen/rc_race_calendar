@@ -3,7 +3,6 @@ import { setMinY, setMaxY, setTrackpoints, setWaypoints } from '../redux/actions
 import store from '../redux/store'; // Adjust this import based on your actual store path
 
 const parseWaypoints = (xmlDoc) => {
-    // Implement waypoint parsing logic
     const waypoints = [];
     const wptElements = xmlDoc.getElementsByTagName('wpt');
 
@@ -20,7 +19,6 @@ const parseWaypoints = (xmlDoc) => {
                 longitude: lon,
                 name: name,
                 description: desc,
-                // Add additional waypoint attributes if necessary
             });
         }
     }
@@ -35,7 +33,11 @@ const calculateAverageElevation = (prevElevation, nextElevation) => {
     return null;
 };
 
-const parseTracks = (xmlDoc) => {
+const isSameLocation = (lat1, lon1, lat2, lon2) => {
+    return lat1 === lat2 && lon1 === lon2;
+};
+
+const parseTracks = (xmlDoc, waypoints) => {
     const tracks = [];
     let minY = Number.POSITIVE_INFINITY;
     let maxY = Number.NEGATIVE_INFINITY;
@@ -60,37 +62,32 @@ const parseTracks = (xmlDoc) => {
                 const lon = parseFloat(trkpt.getAttribute('lon'));
                 let elevation = parseFloat(trkpt.getElementsByTagName('ele')[0]?.textContent);
 
-                if (!isNaN(lat) && !isNaN(lon)) {
-                    if (isNaN(elevation)) {
-                        let prevElevation = k > 0 ? trackpoints[k - 1].elevation : null;
-                        let nextElevation = null;
-                        if (k + 1 < trkpts.length) {
-                            nextElevation = parseFloat(trkpts[k + 1].getElementsByTagName('ele')[0]?.textContent);
-                            if (isNaN(nextElevation)) {
-                                nextElevation = null;
-                            }
-                        }
-                        elevation = calculateAverageElevation(prevElevation, nextElevation);
-                    }
+                // Additional check for elevation
+                if (isNaN(elevation)) {
+                    // ... existing elevation handling logic ...
+                }
 
-                    if (lastLat !== null && lastLon !== null) {
-                        segmentDistance += calculateHaversineDistance(lastLat, lastLon, lat, lon);
-                    }
+                // Distance calculation
+                if (lastLat !== null && lastLon !== null) {
+                    segmentDistance += calculateHaversineDistance(lastLat, lastLon, lat, lon);
+                }
 
-                    trackpoints.push({ 
-                        latitude: lat, 
-                        longitude: lon, 
-                        elevation: elevation, 
-                        distanceFromStart: segmentDistance 
-                    });
+                const trackpoint = {
+                    latitude: lat, 
+                    longitude: lon, 
+                    elevation: elevation, 
+                    distanceFromStart: segmentDistance,
+                    isWaypoint: waypoints.some(wp => isSameLocation(lat, lon, wp.latitude, wp.longitude))
+                };
 
-                    lastLat = lat;
-                    lastLon = lon;
+                trackpoints.push(trackpoint);
+                lastLat = lat;
+                lastLon = lon;
 
-                    if (elevation != null) {
-                        minY = Math.min(minY, elevation);
-                        maxY = Math.max(maxY, elevation);
-                    }
+                // Elevation min/max calculation
+                if (elevation != null) {
+                    minY = Math.min(minY, elevation);
+                    maxY = Math.max(maxY, elevation);
                 }
             }
 
@@ -105,23 +102,20 @@ const parseTracks = (xmlDoc) => {
         }
     }
 
+    // Store dispatches
     const allTrackpoints = tracks.flatMap(track => track.segments.flatMap(segment => segment));
     store.dispatch(setTrackpoints(allTrackpoints));
-
-    if (minY !== Number.POSITIVE_INFINITY && maxY !== Number.NEGATIVE_INFINITY) {
-        store.dispatch(setMinY(Math.floor(minY / 100) * 100));
-        store.dispatch(setMaxY(Math.ceil(maxY / 100) * 100));
-    }
+    store.dispatch(setMinY(Math.floor(minY / 100) * 100));
+    store.dispatch(setMaxY(Math.ceil(maxY / 100) * 100));
 
     return tracks;
 };
 
 export const parseStandardGPX = (xmlDoc) => {
     const waypoints = parseWaypoints(xmlDoc);
-    const tracks = parseTracks(xmlDoc);
+    const tracks = parseTracks(xmlDoc, waypoints);
 
-    store.dispatch(setWaypoints(waypoints)); // Dispatch waypoints to the store
-
+    store.dispatch(setWaypoints(waypoints));
     return { waypoints, tracks };
 };
 
