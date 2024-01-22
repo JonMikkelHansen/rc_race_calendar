@@ -5,6 +5,13 @@ export const setTolerance = (tolerance) => ({
   payload: tolerance,
 });
 
+export const SET_TENSION = 'SET_TENSION';
+
+export const setTension = (tension) => ({
+  type: SET_TENSION,
+  payload: tension,
+});
+
 // Keep existing actions for minY and maxY
 export const SET_MINY = 'SET_MINY';
 export const SET_MAXY = 'SET_MAXY';

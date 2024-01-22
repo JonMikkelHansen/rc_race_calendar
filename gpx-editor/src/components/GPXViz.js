@@ -2,51 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { useSelector, useDispatch } from 'react-redux';
-import { setTolerance, setMinY, setMaxY } from '../redux/actions/GPXActions';
-import { douglasPeucker, calculateHaversineDistance } from '../Utilities';
+import { setTolerance, setTension, setMinY, setMaxY } from '../redux/actions/GPXActions';
+import { douglasPeucker } from '../Utilities';
 
-const GPXViz = ({ gpxData }) => {
+const GPXViz = () => {
   const dispatch = useDispatch();
   const reduxTolerance = useSelector(state => state.tolerance);
+  const reduxTension = useSelector(state => state.tension);
   const reduxMinY = useSelector(state => state.minY);
   const reduxMaxY = useSelector(state => state.maxY);
+  const waypoints = useSelector(state => state.waypoints);
+  const trackpoints = useSelector(state => state.trackpoints);
   const [simplifiedData, setSimplifiedData] = useState([]);
-  const [waypoints, setWaypoints] = useState([]);
   const [initialYSet, setInitialYSet] = useState(false);
 
   useEffect(() => {
-    if (gpxData.tracks) {
-      let allTrackPoints = [];
-      let elevations = [];
-      let totalDistance = 0; // in meters initially
+    if (trackpoints.length > 0) {
+      // Apply Douglas-Peucker algorithm considering waypoints
+      const simplifiedTrackPoints = douglasPeucker(trackpoints, reduxTolerance);
+      setSimplifiedData(simplifiedTrackPoints);
 
-      gpxData.tracks.forEach(track => {
-        track.segments.forEach(segment => {
-          let lastLat = null;
-          let lastLon = null;
-
-          const simplifiedSegment = douglasPeucker(segment, reduxTolerance).map(point => {
-            if (lastLat !== null && lastLon !== null) {
-              totalDistance += calculateHaversineDistance(lastLat, lastLon, point.latitude, point.longitude);
-            }
-
-            lastLat = point.latitude;
-            lastLon = point.longitude;
-
-            return { 
-              ...point, 
-              distanceFromStart: totalDistance / 1000 // Convert to kilometers
-            };
-          });
-
-          allTrackPoints.push(...simplifiedSegment);
-          elevations.push(...simplifiedSegment.map(p => p.elevation));
-        });
-      });
-
-      setSimplifiedData(allTrackPoints);
-
-      if (!initialYSet && elevations.length > 0) {
+      if (!initialYSet) {
+        const elevations = simplifiedTrackPoints.map(p => p.elevation);
         const lowestElevation = Math.floor(Math.min(...elevations) / 100) * 100;
         const highestElevation = Math.ceil(Math.max(...elevations) / 100) * 100;
         dispatch(setMinY(lowestElevation));
@@ -54,34 +31,14 @@ const GPXViz = ({ gpxData }) => {
         setInitialYSet(true);
       }
     }
-
-    // Parsing and filtering waypoints
-    if (gpxData.waypoints) {
-      let totalDistance = 0;
-      let lastLat = null;
-      let lastLon = null;
-
-      const filteredWaypoints = gpxData.waypoints.filter(wp => !wp.name.startsWith("KM"));
-      const waypointsWithDistance = filteredWaypoints.map(wp => {
-        if (lastLat !== null && lastLon !== null) {
-          totalDistance += calculateHaversineDistance(lastLat, lastLon, wp.latitude, wp.longitude);
-        }
-
-        lastLat = wp.latitude;
-        lastLon = wp.longitude;
-
-        return {
-          ...wp,
-          distanceFromStart: totalDistance / 1000 // Convert to kilometers
-        };
-      });
-
-      setWaypoints(waypointsWithDistance);
-    }
-  }, [gpxData, reduxTolerance, dispatch, initialYSet]);
+  }, [trackpoints, reduxTolerance, dispatch, initialYSet]);
 
   const handleToleranceChange = (e) => {
     dispatch(setTolerance(parseFloat(e.target.value)));
+  };
+
+  const handleTensionChange = (e) => {
+    dispatch(setTension(parseFloat(e.target.value)));
   };
 
   const handleMinYChange = (e) => {
@@ -102,7 +59,7 @@ const GPXViz = ({ gpxData }) => {
       data: elevationData,
       fill: false,
       borderColor: 'rgb(75, 192, 192)',
-      tension: 0.9,
+      tension: reduxTension, // Use tension value from Redux store
     }]
   };
 
@@ -135,6 +92,17 @@ const GPXViz = ({ gpxData }) => {
         />
       </div>
       <div>
+        <label>Tension:</label>
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          max="1"
+          value={reduxTension}
+          onChange={handleTensionChange}
+        />
+      </div>
+      <div>
         <label>Minimum Elevation (step of 50):</label>
         <input
           type="number"
@@ -156,7 +124,7 @@ const GPXViz = ({ gpxData }) => {
       <ul>
         {waypoints.map((wp, index) => (
           <li key={index}>
-            Name: {wp.name}, Elevation: {wp.elevation}m, Distance: {wp.distanceFromStart.toFixed(2)}km
+            {wp.name}, Elevation: {wp.elevation}m, Distance: {(wp.distanceFromStart / 1000).toFixed(2)}km
           </li>
         ))}
       </ul>

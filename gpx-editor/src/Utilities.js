@@ -28,7 +28,6 @@ export function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
  * @returns {Array} Simplified array of track points.
  */
 export function douglasPeucker(points, tolerance) {
-  // Base case
   if (points.length <= 2) {
     return points;
   }
@@ -39,29 +38,29 @@ export function douglasPeucker(points, tolerance) {
   const lastPoint = points[points.length - 1];
 
   for (let i = 1; i < points.length - 1; i++) {
-    // Do not consider waypoints for removal
-    if (points[i].isWaypoint) {
-      continue;
-    }
+    const point = points[i];
+    const distance = perpendicularDistance(point, { start: firstPoint, end: lastPoint });
 
-    const distance = perpendicularDistance(points[i], { start: firstPoint, end: lastPoint });
-    if (distance > maxDistance) {
+    if (distance > maxDistance && !point.isWaypoint) {
       maxDistance = distance;
       index = i;
     }
   }
 
   if (maxDistance > tolerance) {
+    // Split the array into two at the index and recursively simplify
     const firstHalf = douglasPeucker(points.slice(0, index + 1), tolerance);
     const secondHalf = douglasPeucker(points.slice(index), tolerance);
 
-    // Merge the arrays, ensuring no duplication of the middle point
+    // Concatenate the results and ensure that waypoints are included
     return [...firstHalf.slice(0, -1), ...secondHalf];
   } else {
-    // Include all waypoints in the results
-    return [firstPoint, ...points.filter(p => p.isWaypoint), lastPoint];
+    // Return the endpoints and any waypoints in between
+    const waypoints = points.filter(p => p.isWaypoint);
+    return [firstPoint, ...waypoints, lastPoint];
   }
 }
+
 
 /**
  * Calculates the perpendicular distance from a point to a line segment.
