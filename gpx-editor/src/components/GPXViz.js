@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import 'chart.js/auto';
 import { useSelector, useDispatch } from 'react-redux';
 import { setTolerance, setTension, setMinY, setMaxY } from '../redux/actions/GPXActions';
+import { Chart, registerables } from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
 import { douglasPeucker } from '../Utilities';
+
+Chart.register(...registerables, annotationPlugin);
 
 const GPXViz = () => {
   const dispatch = useDispatch();
@@ -16,12 +19,30 @@ const GPXViz = () => {
   const [simplifiedData, setSimplifiedData] = useState([]);
   const [initialYSet, setInitialYSet] = useState(false);
   const [showOnlyWaypoints, setShowOnlyWaypoints] = useState(false);
+  const [annotations, setAnnotations] = useState([]);
+  const [maxDistanceKm, setMaxDistanceKm] = useState(null);
 
   useEffect(() => {
     if (trackpoints.length > 0) {
-      // Apply Douglas-Peucker algorithm considering waypoints
       const simplifiedTrackPoints = douglasPeucker(trackpoints, reduxTolerance);
       setSimplifiedData(simplifiedTrackPoints);
+
+      const maxDistance = (Math.max(...simplifiedTrackPoints.map(tp => tp.distanceFromStart)) / 1000).toFixed(2);
+      setMaxDistanceKm(maxDistance);
+
+      setAnnotations(waypoints.map((waypoint, index) => ({
+        type: 'line',
+        mode: 'vertical',
+        scaleID: 'x',
+        value: (waypoint.distanceFromStart / 1000).toFixed(2),
+        borderColor: 'red',
+        borderWidth: 1,
+        borderDash: [5, 5],
+        label: {
+          enabled: true,
+          content: `Waypoint ${index + 1}`
+        }
+      })));
 
       if (!initialYSet) {
         const elevations = simplifiedTrackPoints.map(p => p.elevation);
@@ -32,27 +53,13 @@ const GPXViz = () => {
         setInitialYSet(true);
       }
     }
-  }, [trackpoints, reduxTolerance, dispatch, initialYSet]);
+  }, [trackpoints, reduxTolerance, dispatch, initialYSet, waypoints]);
 
-  const handleToleranceChange = (e) => {
-    dispatch(setTolerance(parseFloat(e.target.value)));
+  const handleInputChange = (actionCreator) => (e) => {
+    dispatch(actionCreator(parseFloat(e.target.value)));
   };
 
-  const handleTensionChange = (e) => {
-    dispatch(setTension(parseFloat(e.target.value)));
-  };
-
-  const handleMinYChange = (e) => {
-    dispatch(setMinY(Number(e.target.value)));
-  };
-
-  const handleMaxYChange = (e) => {
-    dispatch(setMaxY(Number(e.target.value)));
-  };
-
-  const toggleWaypoints = () => {
-    setShowOnlyWaypoints(!showOnlyWaypoints);
-  };
+  const toggleWaypoints = () => setShowOnlyWaypoints(!showOnlyWaypoints);
 
   const data = {
     labels: simplifiedData.map(point => (point.distanceFromStart / 1000).toFixed(1)),
@@ -63,25 +70,21 @@ const GPXViz = () => {
       borderColor: 'rgb(75, 192, 192)',
       tension: reduxTension,
       pointRadius: simplifiedData.map(point => point.isWaypoint || !showOnlyWaypoints ? 3 : 0),
-      // Adjust point radius based on waypoint status and toggle state
     }]
   };
 
-  const labels = simplifiedData.map(point => (point.distanceFromStart / 1000).toFixed(1));
-  const elevationData = simplifiedData.map(point => point.elevation);
-
   const options = {
     scales: {
-      y: {
-        min: reduxMinY,
-        max: reduxMaxY,
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Distance (kilometers)'
-        }
+      y: { min: reduxMinY, max: reduxMaxY },
+      x: { 
+        title: { display: true, text: 'Distance (kilometers)' },
+        max: maxDistanceKm,
       }
+    },
+    plugins: {
+      annotation: {
+        annotations: annotations,
+      },
     },
   };
 
@@ -98,7 +101,7 @@ const GPXViz = () => {
           type="number"
           step="0.0000001"
           value={reduxTolerance}
-          onChange={handleToleranceChange}
+          onChange={handleInputChange(setTolerance)}
         />
       </div>
       <div>
@@ -109,7 +112,7 @@ const GPXViz = () => {
           min="0"
           max="1"
           value={reduxTension}
-          onChange={handleTensionChange}
+          onChange={handleInputChange(setTension)}
         />
       </div>
       <div>
@@ -118,7 +121,7 @@ const GPXViz = () => {
           type="number"
           step="50"
           value={reduxMinY}
-          onChange={handleMinYChange}
+          onChange={handleInputChange(setMinY)}
         />
       </div>
       <div>
@@ -127,17 +130,9 @@ const GPXViz = () => {
           type="number"
           step="50"
           value={reduxMaxY}
-          onChange={handleMaxYChange}
+          onChange={handleInputChange(setMaxY)}
         />
       </div>
-      <h3>Waypoints</h3>
-      <ul>
-        {waypoints.map((wp, index) => (
-          <li key={index}>
-            {wp.name}, Elevation: {wp.elevation}m, Distance: {(wp.distanceFromStart / 1000).toFixed(2)}km
-          </li>
-        ))}
-      </ul>
     </div>
   );
 };

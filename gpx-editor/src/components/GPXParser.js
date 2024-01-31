@@ -1,6 +1,13 @@
 import { calculateHaversineDistance } from '../Utilities';
 import { setMinY, setMaxY, setTrackpoints, setWaypoints } from '../redux/actions/GPXActions';
-import store from '../redux/store'; 
+import store from '../redux/store';
+
+const calculateAverageElevation = (prevElevation, nextElevation) => {
+    if (prevElevation != null && nextElevation != null) {
+        return (prevElevation + nextElevation) / 2;
+    }
+    return null;
+};
 
 const parseWaypoints = (xmlDoc) => {
     const waypoints = [];
@@ -15,6 +22,7 @@ const parseWaypoints = (xmlDoc) => {
 
         if (!isNaN(lat) && !isNaN(lon) && !name.startsWith("KM")) {
             waypoints.push({
+                id: `waypoint-${Date.now()}-${i}`, // Unique ID
                 latitude: lat,
                 longitude: lon,
                 name: name,
@@ -28,18 +36,12 @@ const parseWaypoints = (xmlDoc) => {
     return waypoints;
 };
 
-const calculateAverageElevation = (prevElevation, nextElevation) => {
-    if (prevElevation != null && nextElevation != null) {
-        return (prevElevation + nextElevation) / 2;
-    }
-    return null;
-};
-
 const parseTracks = (xmlDoc, waypoints) => {
     const tracks = [];
     let minY = Number.POSITIVE_INFINITY;
     let maxY = Number.NEGATIVE_INFINITY;
     const trkElements = xmlDoc.getElementsByTagName('trk');
+    let trackpointIdCounter = 0;
 
     for (let i = 0; i < trkElements.length; i++) {
         const trk = trkElements[i];
@@ -77,10 +79,11 @@ const parseTracks = (xmlDoc, waypoints) => {
                         segmentDistance += calculateHaversineDistance(lastLat, lastLon, lat, lon);
                     }
 
-                    trackpoints.push({ 
-                        latitude: lat, 
-                        longitude: lon, 
-                        elevation: elevation, 
+                    trackpoints.push({
+                        id: `trackpoint-${trackpointIdCounter++}`, // Unique ID
+                        latitude: lat,
+                        longitude: lon,
+                        elevation: elevation,
                         distanceFromStart: segmentDistance,
                         isWaypoint: waypoints.some(wp => wp.latitude === lat && wp.longitude === lon)
                     });
@@ -111,12 +114,12 @@ const parseTracks = (xmlDoc, waypoints) => {
     store.dispatch(setMinY(Math.floor(minY / 100) * 100));
     store.dispatch(setMaxY(Math.ceil(maxY / 100) * 100));
 
-    return { tracks, allTrackpoints };
+    return { tracks, allTrackpoints, minY: Math.floor(minY / 100) * 100, maxY: Math.ceil(maxY / 100) * 100 };
 };
 
 export const parseStandardGPX = (xmlDoc) => {
     const waypoints = parseWaypoints(xmlDoc);
-    const { tracks, allTrackpoints } = parseTracks(xmlDoc, waypoints);
+    const { tracks, allTrackpoints, minY, maxY } = parseTracks(xmlDoc, waypoints);
 
     // Update waypoints with elevation and distance from trackpoints
     waypoints.forEach(wp => {
@@ -127,10 +130,12 @@ export const parseStandardGPX = (xmlDoc) => {
         }
     });
 
-    store.dispatch(setWaypoints(waypoints));
-    return { waypoints, tracks };
+    store.dispatch(setWaypoints(waypoints)); // Make sure to dispatch the waypoints after they've been updated
+
+    return { waypoints, tracks, allTrackpoints, minY, maxY };
 };
 
 export const parseCustomGPX = (xmlDoc) => {
+    // This function seems to wrap parseStandardGPX without additional logic specific to custom parsing
     return parseStandardGPX(xmlDoc);
 };
