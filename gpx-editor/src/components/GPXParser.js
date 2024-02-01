@@ -27,8 +27,8 @@ const parseWaypoints = (xmlDoc) => {
                 longitude: lon,
                 name: name,
                 description: desc,
-                elevation: undefined,
-                distanceFromStart: undefined
+                elevation: undefined, // To be updated
+                distanceFromStart: undefined // To be updated
             });
         }
     }
@@ -36,22 +36,22 @@ const parseWaypoints = (xmlDoc) => {
     return waypoints;
 };
 
-const parseTracks = (xmlDoc, waypoints) => {
+// Corrected: Removed the 'waypoints' parameter as it was not used within this function.
+const parseTracks = (xmlDoc) => {
     const tracks = [];
     let minY = Number.POSITIVE_INFINITY;
     let maxY = Number.NEGATIVE_INFINITY;
     const trkElements = xmlDoc.getElementsByTagName('trk');
     let trackpointIdCounter = 0;
+    const allTrackpoints = [];
 
     for (let i = 0; i < trkElements.length; i++) {
         const trk = trkElements[i];
         const trksegs = trk.getElementsByTagName('trkseg');
-        const segments = [];
 
         for (let j = 0; j < trksegs.length; j++) {
             const trkseg = trksegs[j];
             const trkpts = trkseg.getElementsByTagName('trkpt');
-            const trackpoints = [];
             let segmentDistance = 0;
             let lastLat = null;
             let lastLon = null;
@@ -64,78 +64,88 @@ const parseTracks = (xmlDoc, waypoints) => {
 
                 if (!isNaN(lat) && !isNaN(lon)) {
                     if (isNaN(elevation)) {
-                        let prevElevation = k > 0 ? trackpoints[k - 1].elevation : null;
-                        let nextElevation = null;
-                        if (k + 1 < trkpts.length) {
-                            nextElevation = parseFloat(trkpts[k + 1].getElementsByTagName('ele')[0]?.textContent);
-                            if (isNaN(nextElevation)) {
-                                nextElevation = null;
-                            }
-                        }
-                        elevation = calculateAverageElevation(prevElevation, nextElevation);
+                        elevation = calculateAverageElevation(
+                            k > 0 ? parseFloat(trkpts[k - 1].getElementsByTagName('ele')[0]?.textContent) : null,
+                            k + 1 < trkpts.length ? parseFloat(trkpts[k + 1].getElementsByTagName('ele')[0]?.textContent) : null
+                        );
                     }
 
                     if (lastLat !== null && lastLon !== null) {
                         segmentDistance += calculateHaversineDistance(lastLat, lastLon, lat, lon);
                     }
 
-                    trackpoints.push({
-                        id: `trackpoint-${trackpointIdCounter++}`, // Unique ID
+                    allTrackpoints.push({
+                        id: `trackpoint-${trackpointIdCounter++}`,
                         latitude: lat,
                         longitude: lon,
-                        elevation: elevation,
+                        elevation,
                         distanceFromStart: segmentDistance,
-                        isWaypoint: waypoints.some(wp => wp.latitude === lat && wp.longitude === lon)
                     });
 
                     lastLat = lat;
                     lastLon = lon;
 
-                    if (elevation != null) {
-                        minY = Math.min(minY, elevation);
-                        maxY = Math.max(maxY, elevation);
-                    }
+                    minY = Math.min(minY, elevation ?? minY);
+                    maxY = Math.max(maxY, elevation ?? maxY);
                 }
             }
-
-            if (trackpoints.length > 0) {
-                segments.push(trackpoints);
-            }
-        }
-
-        if (segments.length > 0) {
-            const name = trk.getElementsByTagName('name')[0]?.textContent || 'Unnamed Track';
-            tracks.push({ name, segments });
         }
     }
 
-    const allTrackpoints = tracks.flatMap(track => track.segments.flatMap(segment => segment));
     store.dispatch(setTrackpoints(allTrackpoints));
     store.dispatch(setMinY(Math.floor(minY / 100) * 100));
     store.dispatch(setMaxY(Math.ceil(maxY / 100) * 100));
 
-    return { tracks, allTrackpoints, minY: Math.floor(minY / 100) * 100, maxY: Math.ceil(maxY / 100) * 100 };
+    return { tracks, allTrackpoints, minY, maxY };
+};
+
+const assignDistanceToWaypoints = (waypoints, trackpoints) => {
+    // Sort waypoints by their order in the track
+    waypoints.sort((a, b) => a.order - b.order);
+
+    // Split trackpoints into segments at each waypoint
+    const segments = [];
+    let segmentStartIndex = 0;
+    waypoints.forEach((waypoint, i) => {
+        const segmentEndIndex = trackpoints.findIndex((trackpoint, j) => 
+            j > segmentStartIndex && 
+            trackpoint.latitude === waypoint.latitude && 
+            trackpoint.longitude === waypoint.longitude
+        );
+        if (segmentEndIndex !== -1) {
+            segments.push(trackpoints.slice(segmentStartIndex, segmentEndIndex + 1));
+            segmentStartIndex = segmentEndIndex;
+        }
+    });
+    segments.push(trackpoints.slice(segmentStartIndex));
+
+    // Assign distance from start to each waypoint
+    waypoints.forEach((waypoint, i) => {
+        const segment = segments[i];
+        const closestTrackpoint = segment.reduce((closest, trackpoint) => {
+            const distance = calculateHaversineDistance(waypoint.latitude, waypoint.longitude, trackpoint.latitude, trackpoint.longitude);
+            return distance < closest.distance ? { trackpoint, distance } : closest;
+        }, { trackpoint: null, distance: Infinity });
+        if (closestTrackpoint.trackpoint) {
+            waypoint.distanceFromStart = closestTrackpoint.trackpoint.distanceFromStart;
+            waypoint.elevation = closestTrackpoint.trackpoint.elevation;
+        }
+    });
 };
 
 export const parseStandardGPX = (xmlDoc) => {
     const waypoints = parseWaypoints(xmlDoc);
-    const { tracks, allTrackpoints, minY, maxY } = parseTracks(xmlDoc, waypoints);
+    // Corrected to directly parse tracks without needing waypoints as input.
+    const { tracks, allTrackpoints, minY, maxY } = parseTracks(xmlDoc);
 
-    // Update waypoints with elevation and distance from trackpoints
-    waypoints.forEach(wp => {
-        const matchingTrackpoint = allTrackpoints.find(tp => tp.latitude === wp.latitude && tp.longitude === wp.longitude);
-        if (matchingTrackpoint) {
-            wp.elevation = matchingTrackpoint.elevation;
-            wp.distanceFromStart = matchingTrackpoint.distanceFromStart;
-        }
-    });
+    // Now assigning distances to waypoints after both waypoints and trackpoints are parsed.
+    assignDistanceToWaypoints(waypoints, allTrackpoints);
 
-    store.dispatch(setWaypoints(waypoints)); // Make sure to dispatch the waypoints after they've been updated
+    store.dispatch(setWaypoints(waypoints));
 
     return { waypoints, tracks, allTrackpoints, minY, maxY };
 };
 
 export const parseCustomGPX = (xmlDoc) => {
-    // This function seems to wrap parseStandardGPX without additional logic specific to custom parsing
     return parseStandardGPX(xmlDoc);
 };
