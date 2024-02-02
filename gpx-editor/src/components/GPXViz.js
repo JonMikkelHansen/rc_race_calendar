@@ -24,6 +24,8 @@ const GPXViz = () => {
 
 
     useEffect(() => {
+      dispatch(setTolerance(100)); // Initial tolerance set to 100
+      dispatch(setTension(0)); // Initial tension set to 0
         if (trackpoints.length > 0) {
             // Simplify trackpoints using Douglas-Peucker algorithm
             const simplifiedTrackPoints = douglasPeucker(trackpoints, reduxTolerance);
@@ -49,13 +51,14 @@ const GPXViz = () => {
         })));
 
         if (!initialYSet && trackpoints.length > 0) {
-            const elevations = trackpoints.map(p => p.elevation);
-            const lowestElevation = Math.floor(Math.min(...elevations) / 100) * 100;
-            const highestElevation = Math.ceil(Math.max(...elevations) / 100) * 100;
-            dispatch(setMinY(lowestElevation));
-            dispatch(setMaxY(highestElevation));
-            setInitialYSet(true);
-        }
+          const elevations = trackpoints.map(p => p.elevation);
+          const lowestElevation = Math.floor(Math.min(...elevations) / 100) * 100;
+          let highestElevation = Math.ceil(Math.max(...elevations) / 100) * 100;
+          highestElevation = Math.max(highestElevation, 1000); // Ensure max elevation is at least 1000
+          dispatch(setMinY(lowestElevation));
+          dispatch(setMaxY(highestElevation));
+          setInitialYSet(true);
+      }
     }, [trackpoints, reduxTolerance, dispatch, initialYSet, waypoints]);
 
     const handleInputChange = (actionCreator) => (e) => {
