@@ -20,6 +20,8 @@ const GPXViz = () => {
     const [initialYSet, setInitialYSet] = useState(false);
     const [annotations, setAnnotations] = useState([]);
     const [maxDistanceKm, setMaxDistanceKm] = useState(null);
+    const [showOnlyWaypoints, setShowOnlyWaypoints] = useState(false);
+
 
     useEffect(() => {
         if (trackpoints.length > 0) {
@@ -61,16 +63,16 @@ const GPXViz = () => {
     };
 
     const data = {
-        labels: simplifiedData.map(point => (point.distanceFromStart / 1000).toFixed(1)),
-        datasets: [{
-            label: 'Elevation',
-            data: simplifiedData.map(point => point.elevation),
-            fill: false,
-            borderColor: 'rgb(75, 192, 192)',
-            tension: reduxTension,
-            pointRadius: simplifiedData.map(point => point.isWaypoint ? 5 : 3), // Increase radius for waypoints
-            pointBackgroundColor: simplifiedData.map(point => point.isWaypoint ? 'red' : 'rgb(75, 192, 192)'), // Color waypoints in red
-        }]
+      labels: simplifiedData.map(point => (point.distanceFromStart / 1000).toFixed(1)),
+      datasets: [{
+        label: 'Elevation',
+        data: simplifiedData.map(point => point.elevation),
+        fill: true,
+        borderColor: 'rgb(75, 192, 192)',
+        tension: reduxTension,
+        pointRadius: simplifiedData.map(point => (point.isWaypoint && showOnlyWaypoints) ? 5 : 3), // Change 0 to 1 or any other value that suits your needs
+        pointBackgroundColor: simplifiedData.map(point => (point.isWaypoint && showOnlyWaypoints) ? 'red' : 'rgb(75, 192, 192)'),
+      }]
     };
 
     const options = {
@@ -93,6 +95,11 @@ const GPXViz = () => {
             <h2>Height Profile</h2>
             <Line data={data} options={options} />
             <div>
+            <button onClick={() => setShowOnlyWaypoints(prevState => !prevState)}>
+                Toggle Waypoints
+            </button>
+            </div>
+            <div>
                 <label>Tolerance:</label>
                 <input
                     type="number"
@@ -113,21 +120,21 @@ const GPXViz = () => {
                 />
             </div>
             <div>
-                <label>Minimum Elevation (step of 50):</label>
-                <input
-                    type="number"
-                    step="50"
-                    value={reduxMinY}
-                    onChange={handleInputChange(setMinY)}
-                />
-            </div>
-            <div>
                 <label>Maximum Elevation (step of 50):</label>
                 <input
                     type="number"
                     step="50"
                     value={reduxMaxY}
                     onChange={handleInputChange(setMaxY)}
+                />
+            </div>
+            <div>
+                <label>Minimum Elevation (step of 50):</label>
+                <input
+                    type="number"
+                    step="50"
+                    value={reduxMinY}
+                    onChange={handleInputChange(setMinY)}
                 />
             </div>
         </div>

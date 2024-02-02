@@ -113,6 +113,10 @@ const assignDistanceToWaypoints = (waypoints, trackpoints) => {
             trackpoint.longitude === waypoint.longitude
         );
         if (segmentEndIndex !== -1) {
+            // Assign isWaypoint and waypointId to the trackpoint
+            trackpoints[segmentEndIndex].isWaypoint = true;
+            trackpoints[segmentEndIndex].waypointId = waypoint.id; // Assuming each waypoint has a unique id property
+
             segments.push(trackpoints.slice(segmentStartIndex, segmentEndIndex + 1));
             segmentStartIndex = segmentEndIndex;
         }
