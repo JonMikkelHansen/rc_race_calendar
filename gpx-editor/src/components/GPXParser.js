@@ -36,7 +36,6 @@ const parseWaypoints = (xmlDoc) => {
     return waypoints;
 };
 
-// Corrected: Removed the 'waypoints' parameter as it was not used within this function.
 const parseTracks = (xmlDoc) => {
     const tracks = [];
     let minY = Number.POSITIVE_INFINITY;
@@ -80,6 +79,8 @@ const parseTracks = (xmlDoc) => {
                         longitude: lon,
                         elevation,
                         distanceFromStart: segmentDistance,
+                        isWaypoint: false, // Initialize all trackpoints with isWaypoint set to false
+                        waypointID: null // Initialize waypointID as null
                     });
 
                     lastLat = lat;
@@ -100,53 +101,26 @@ const parseTracks = (xmlDoc) => {
 };
 
 const assignDistanceToWaypoints = (waypoints, trackpoints) => {
-    // Sort waypoints by their order in the track
-    waypoints.sort((a, b) => a.order - b.order);
-
-    // Split trackpoints into segments at each waypoint
-    const segments = [];
-    let segmentStartIndex = 0;
-    waypoints.forEach((waypoint, i) => {
-        const segmentEndIndex = trackpoints.findIndex((trackpoint, j) => 
-            j > segmentStartIndex && 
-            trackpoint.latitude === waypoint.latitude && 
-            trackpoint.longitude === waypoint.longitude
-        );
-        if (segmentEndIndex !== -1) {
-            // Assign isWaypoint and waypointId to the trackpoint
-            trackpoints[segmentEndIndex].isWaypoint = true;
-            trackpoints[segmentEndIndex].waypointId = waypoint.id; // Assuming each waypoint has a unique id property
-
-            segments.push(trackpoints.slice(segmentStartIndex, segmentEndIndex + 1));
-            segmentStartIndex = segmentEndIndex;
-        }
-    });
-    segments.push(trackpoints.slice(segmentStartIndex));
-
-    // Assign distance from start to each waypoint
-    waypoints.forEach((waypoint, i) => {
-        const segment = segments[i];
-        const closestTrackpoint = segment.reduce((closest, trackpoint) => {
+    waypoints.forEach(waypoint => {
+        trackpoints.forEach(trackpoint => {
             const distance = calculateHaversineDistance(waypoint.latitude, waypoint.longitude, trackpoint.latitude, trackpoint.longitude);
-            return distance < closest.distance ? { trackpoint, distance } : closest;
-        }, { trackpoint: null, distance: Infinity });
-        if (closestTrackpoint.trackpoint) {
-            waypoint.distanceFromStart = closestTrackpoint.trackpoint.distanceFromStart;
-            waypoint.elevation = closestTrackpoint.trackpoint.elevation;
-        }
+            // Consider a very small distance to account for GPS inaccuracies
+            if (distance < 0.05) { // Adjust this threshold based on your accuracy requirements
+                trackpoint.isWaypoint = true;
+                trackpoint.waypointID = waypoint.id;
+                // Update waypoint with trackpoint information
+                waypoint.distanceFromStart = trackpoint.distanceFromStart;
+                waypoint.elevation = trackpoint.elevation;
+            }
+        });
     });
 };
 
 export const parseStandardGPX = (xmlDoc) => {
     const waypoints = parseWaypoints(xmlDoc);
-    // Corrected to directly parse tracks without needing waypoints as input.
     const { tracks, allTrackpoints, minY, maxY } = parseTracks(xmlDoc);
-
-    // Now assigning distances to waypoints after both waypoints and trackpoints are parsed.
     assignDistanceToWaypoints(waypoints, allTrackpoints);
-
     store.dispatch(setWaypoints(waypoints));
-
     return { waypoints, tracks, allTrackpoints, minY, maxY };
 };
 

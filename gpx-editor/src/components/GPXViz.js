@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useSelector, useDispatch } from 'react-redux';
-import { setTolerance, setTension, setMinY, setMaxY } from '../redux/actions/GPXActions';
+import {
+  setTolerance, setTension, setMinY, setMaxY,
+  setShowTrackpoints, setShowWaypoints, setShowAnnotations
+} from '../redux/actions/GPXActions';
 import { Chart, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { douglasPeucker } from '../Utilities';
@@ -14,82 +17,89 @@ const GPXViz = () => {
     const reduxTension = useSelector(state => state.tension);
     const reduxMinY = useSelector(state => state.minY);
     const reduxMaxY = useSelector(state => state.maxY);
-    const waypoints = useSelector(state => state.waypoints);
     const trackpoints = useSelector(state => state.trackpoints);
+    const waypoints = useSelector(state => state.waypoints);
+    const showTrackpoints = useSelector(state => state.showTrackpoints);
+    const showWaypoints = useSelector(state => state.showWaypoints);
+    const showAnnotations = useSelector(state => state.showAnnotations);
     const [simplifiedData, setSimplifiedData] = useState([]);
-    const [initialYSet, setInitialYSet] = useState(false);
-    const [annotations, setAnnotations] = useState([]);
     const [maxDistanceKm, setMaxDistanceKm] = useState(null);
-    const [showOnlyWaypoints, setShowOnlyWaypoints] = useState(false);
-
 
     useEffect(() => {
-      dispatch(setTolerance(100)); // Initial tolerance set to 100
-      dispatch(setTension(0)); // Initial tension set to 0
-        if (trackpoints.length > 0) {
-            // Simplify trackpoints using Douglas-Peucker algorithm
-            const simplifiedTrackPoints = douglasPeucker(trackpoints, reduxTolerance);
-            setSimplifiedData(simplifiedTrackPoints);
-
-            const maxDistance = (Math.max(...simplifiedTrackPoints.map(tp => tp.distanceFromStart)) / 1000).toFixed(2);
-            setMaxDistanceKm(maxDistance);
+        if (reduxTolerance === undefined) {
+            dispatch(setTolerance(100));
         }
+        if (reduxTension === undefined) {
+            dispatch(setTension(0));
+        }
+        if (reduxMaxY === undefined) {
+            dispatch(setMaxY(1000));
+        }
+    }, [dispatch, reduxTolerance, reduxTension, reduxMaxY]);
 
-        // Prepare annotations for waypoints
-        setAnnotations(waypoints.map(waypoint => ({
-            type: 'line',
-            mode: 'vertical',
-            scaleID: 'x',
-            value: (waypoint.distanceFromStart / 1000).toFixed(2),
-            borderColor: 'red',
-            borderWidth: 1,
-            borderDash: [5, 5],
-            label: {
-                enabled: true,
-                content: waypoint.name,
-            },
-        })));
+    useEffect(() => {
+        if (trackpoints.length > 0) {
+            const simplifiedTrackPoints = douglasPeucker(trackpoints, reduxTolerance);
+            const dataWithWaypointInfo = simplifiedTrackPoints.map(point => ({
+                x: point.distanceFromStart / 1000,
+                y: point.elevation,
+                isWaypoint: waypoints.some(wp => wp.id === point.waypointID)
+            }));
+            setSimplifiedData(dataWithWaypointInfo);
 
-        if (!initialYSet && trackpoints.length > 0) {
-          const elevations = trackpoints.map(p => p.elevation);
-          const lowestElevation = Math.floor(Math.min(...elevations) / 100) * 100;
-          let highestElevation = Math.ceil(Math.max(...elevations) / 100) * 100;
-          highestElevation = Math.max(highestElevation, 1000); // Ensure max elevation is at least 1000
-          dispatch(setMinY(lowestElevation));
-          dispatch(setMaxY(highestElevation));
-          setInitialYSet(true);
-      }
-    }, [trackpoints, reduxTolerance, dispatch, initialYSet, waypoints]);
+            const maxDistance = simplifiedTrackPoints.reduce((max, p) => Math.max(max, p.distanceFromStart), 0) / 1000;
+            setMaxDistanceKm(maxDistance.toFixed(2));
+        }
+    }, [trackpoints, reduxTolerance, waypoints]);
 
-    const handleInputChange = (actionCreator) => (e) => {
-        dispatch(actionCreator(parseFloat(e.target.value)));
+    useEffect(() => {
+        const elevations = trackpoints.map(p => p.elevation);
+        if (elevations.length > 0) {
+            const minY = Math.floor(Math.min(...elevations) / 100) * 100;
+            let maxY = Math.ceil(Math.max(...elevations) / 100) * 100;
+            maxY = Math.max(maxY, 1000);
+            dispatch(setMinY(minY));
+            dispatch(setMaxY(maxY));
+        }
+    }, [trackpoints, dispatch]);
+
+    const handleInputChange = (action) => (e) => {
+        dispatch(action(parseFloat(e.target.value)));
+    };
+
+    const handleCheckboxChange = (action) => (e) => {
+        dispatch(action(e.target.checked));
     };
 
     const data = {
-      labels: simplifiedData.map(point => (point.distanceFromStart / 1000).toFixed(1)),
       datasets: [{
-        label: 'Elevation',
-        data: simplifiedData.map(point => point.elevation),
-        fill: true,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: reduxTension,
-        pointRadius: simplifiedData.map(point => (point.isWaypoint && showOnlyWaypoints) ? 5 : 3), // Change 0 to 1 or any other value that suits your needs
-        pointBackgroundColor: simplifiedData.map(point => (point.isWaypoint && showOnlyWaypoints) ? 'red' : 'rgb(75, 192, 192)'),
+          label: 'Elevation',
+          data: simplifiedData,
+          showLine: true,
+          fill: false,
+          borderColor: 'rgb(75, 192, 192)',
+          tension: reduxTension,
+          pointRadius: simplifiedData.map(point => 
+              point.isWaypoint && showWaypoints ? 4 : showTrackpoints ? 2 : 0),
+          pointBackgroundColor: simplifiedData.map(point => 
+              point.isWaypoint && showWaypoints ? 'red' : 'rgb(75, 192, 192)'),
       }]
     };
 
     const options = {
         scales: {
             y: { min: reduxMinY, max: reduxMaxY },
-            x: { 
-                title: { display: true, text: 'Distance (kilometers)' },
+            x: {
+                type: 'linear',
+                position: 'bottom',
+                title: { display: true, text: 'Distance (km)' },
                 max: maxDistanceKm,
             }
         },
-        plugins: {
-            annotation: {
-                annotations: annotations,
-            },
+        elements: {
+            line: {
+                tension: 0 // Ensures lines are straight
+            }
         },
     };
 
@@ -98,16 +108,34 @@ const GPXViz = () => {
             <h2>Height Profile</h2>
             <Line data={data} options={options} />
             <div>
-            <button onClick={() => setShowOnlyWaypoints(prevState => !prevState)}>
-                Toggle Waypoints
-            </button>
+                <input
+                    id="showTrackpoints"
+                    type="checkbox"
+                    checked={showTrackpoints}
+                    onChange={handleCheckboxChange(setShowTrackpoints)}
+                />
+                <label htmlFor="showTrackpoints">Trackpoints</label>
+                <input
+                    id="showWaypoints"
+                    type="checkbox"
+                    checked={showWaypoints}
+                    onChange={handleCheckboxChange(setShowWaypoints)}
+                />
+                <label htmlFor="showWaypoints">Waypoints</label>
+                <input
+                    id="showAnnotations"
+                    type="checkbox"
+                    checked={showAnnotations}
+                    onChange={handleCheckboxChange(setShowAnnotations)}
+                />
+                <label htmlFor="showAnnotations">Annotations</label>
             </div>
             <div>
                 <label>Tolerance:</label>
                 <input
                     type="number"
                     step="0.0000001"
-                    value={reduxTolerance}
+                    value={reduxTolerance || 100}
                     onChange={handleInputChange(setTolerance)}
                 />
             </div>
@@ -118,7 +146,7 @@ const GPXViz = () => {
                     step="0.1"
                     min="0"
                     max="1"
-                    value={reduxTension}
+                    value={reduxTension || 0}
                     onChange={handleInputChange(setTension)}
                 />
             </div>
@@ -126,8 +154,8 @@ const GPXViz = () => {
                 <label>Maximum Elevation (step of 50):</label>
                 <input
                     type="number"
-                    step="50"
-                    value={reduxMaxY}
+                    step="10"
+                    value={reduxMaxY || 1000}
                     onChange={handleInputChange(setMaxY)}
                 />
             </div>
@@ -135,7 +163,7 @@ const GPXViz = () => {
                 <label>Minimum Elevation (step of 50):</label>
                 <input
                     type="number"
-                    step="50"
+                    step="10"
                     value={reduxMinY}
                     onChange={handleInputChange(setMinY)}
                 />
