@@ -1,7 +1,8 @@
 import { 
   SET_MINY, SET_MAXY, SET_TOLERANCE, SET_TENSION, 
   SET_TRACKPOINTS, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT,
-  SET_SHOW_TRACKPOINTS, SET_SHOW_WAYPOINTS, SET_SHOW_ANNOTATIONS // Import the new action types
+  SET_SHOW_TRACKPOINTS, SET_SHOW_WAYPOINTS, SET_SHOW_ANNOTATIONS,
+  SET_STAGE_TITLE // Import the new action type
 } from '../actions/GPXActions';
 
 const initialState = {
@@ -11,9 +12,10 @@ const initialState = {
   tension: 0,
   trackpoints: [],
   waypoints: [],
-  showTrackpoints: false, // Default state for trackpoints visibility
-  showWaypoints: true, // Default state for waypoints visibility
-  showAnnotations: false, // Default state for annotations visibility
+  showTrackpoints: false,
+  showWaypoints: true,
+  showAnnotations: false,
+  stageTitle: '', // Initialize stageTitle as an empty string
 };
 
 const GPXReducer = (state = initialState, action) => {
@@ -42,6 +44,8 @@ const GPXReducer = (state = initialState, action) => {
       return { ...state, showWaypoints: action.payload };
     case SET_SHOW_ANNOTATIONS:
       return { ...state, showAnnotations: action.payload };
+    case SET_STAGE_TITLE: // New case for setting the stage title
+      return { ...state, stageTitle: action.payload };
     default:
       return state;
   }

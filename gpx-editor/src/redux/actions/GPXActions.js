@@ -74,3 +74,10 @@ export const setShowAnnotations = (show) => ({
   type: SET_SHOW_ANNOTATIONS,
   payload: show,
 });
+
+
+export const SET_STAGE_TITLE = 'SET_STAGE_TITLE'; // New action type
+export const setStageTitle = (title) => ({
+  type: SET_STAGE_TITLE,
+  payload: title,
+});

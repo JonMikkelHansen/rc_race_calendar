@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  setTolerance, setTension, setMinY, setMaxY,
+  setTolerance, setTension, setMinY, setMaxY, setStageTitle,
   setShowTrackpoints, setShowWaypoints, setShowAnnotations
 } from '../redux/actions/GPXActions';
 import { Chart, registerables } from 'chart.js';
@@ -17,6 +17,7 @@ const GPXViz = () => {
     const reduxTension = useSelector(state => state.tension);
     const reduxMinY = useSelector(state => state.minY);
     const reduxMaxY = useSelector(state => state.maxY);
+    const stageTitle = useSelector(state => state.stageTitle || 'Unknown');
     const trackpoints = useSelector(state => state.trackpoints);
     const waypoints = useSelector(state => state.waypoints);
     const showTrackpoints = useSelector(state => state.showTrackpoints);
@@ -24,6 +25,8 @@ const GPXViz = () => {
     const showAnnotations = useSelector(state => state.showAnnotations);
     const [simplifiedData, setSimplifiedData] = useState([]);
     const [maxDistanceKm, setMaxDistanceKm] = useState(null);
+    const [isEditing, setIsEditing] = useState(false); // Add editing state
+    const [editedTitle, setEditedTitle] = useState(stageTitle); // Add edited title state    
 
     useEffect(() => {
         if (reduxTolerance === undefined) {
@@ -67,6 +70,15 @@ const GPXViz = () => {
         dispatch(action(parseFloat(e.target.value)));
     };
 
+    const handleEditClick = () => {
+      setIsEditing(true); // Enter editing mode
+    };
+
+    const handleSaveClick = () => {
+        setIsEditing(false); // Exit editing mode
+        dispatch(setStageTitle(editedTitle)); // Dispatch the edited title to Redux
+    };
+
     const handleCheckboxChange = (action) => (e) => {
         dispatch(action(e.target.checked));
     };
@@ -102,10 +114,26 @@ const GPXViz = () => {
             }
         },
     };
-
+    
     return (
-        <div>
-            <h2>Height Profile</h2>
+      <div>
+      <h2>Height Profile:&nbsp;
+          {isEditing ? ( // Render input field when editing
+              <input
+                type="text"
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+              />
+          ) : (
+            <>
+              {stageTitle}
+              <button onClick={handleEditClick}>Edit</button>
+            </>
+          )}
+    </h2>
+    {isEditing && (
+        <button onClick={handleSaveClick}>Save</button> // Render save button in editing mode
+    )}
             <Line data={data} options={options} />
             <div>
                 <input
