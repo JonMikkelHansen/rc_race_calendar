@@ -1,5 +1,5 @@
 import { calculateHaversineDistance } from '../Utilities';
-import { setMinY, setMaxY, setTrackpoints, setWaypoints, setStageTitle } from '../redux/actions/GPXActions'; // Import the setStageTitle action
+import { setMinY, setMaxY, setTrackpoints, setWaypoints } from '../redux/actions/GPXActions';
 import store from '../redux/store';
 
 const calculateAverageElevation = (prevElevation, nextElevation) => {
@@ -22,13 +22,13 @@ const parseWaypoints = (xmlDoc) => {
 
         if (!isNaN(lat) && !isNaN(lon) && !name.startsWith("KM")) {
             waypoints.push({
-                id: `waypoint-${Date.now()}-${i}`,
+                id: `waypoint-${Date.now()}-${i}`, // Unique ID
                 latitude: lat,
                 longitude: lon,
                 name: name,
                 description: desc,
-                elevation: undefined,
-                distanceFromStart: undefined
+                elevation: undefined, // To be updated
+                distanceFromStart: undefined // To be updated
             });
         }
     }
@@ -79,8 +79,8 @@ const parseTracks = (xmlDoc) => {
                         longitude: lon,
                         elevation,
                         distanceFromStart: segmentDistance,
-                        isWaypoint: false,
-                        waypointID: null
+                        isWaypoint: false, // Initialize all trackpoints with isWaypoint set to false
+                        waypointID: null // Initialize waypointID as null
                     });
 
                     lastLat = lat;
@@ -104,9 +104,11 @@ const assignDistanceToWaypoints = (waypoints, trackpoints) => {
     waypoints.forEach(waypoint => {
         trackpoints.forEach(trackpoint => {
             const distance = calculateHaversineDistance(waypoint.latitude, waypoint.longitude, trackpoint.latitude, trackpoint.longitude);
-            if (distance < 0.05) {
+            // Consider a very small distance to account for GPS inaccuracies
+            if (distance < 0.05) { // Adjust this threshold based on your accuracy requirements
                 trackpoint.isWaypoint = true;
                 trackpoint.waypointID = waypoint.id;
+                // Update waypoint with trackpoint information
                 waypoint.distanceFromStart = trackpoint.distanceFromStart;
                 waypoint.elevation = trackpoint.elevation;
             }
@@ -118,24 +120,9 @@ export const parseStandardGPX = (xmlDoc) => {
     const waypoints = parseWaypoints(xmlDoc);
     const { tracks, allTrackpoints, minY, maxY } = parseTracks(xmlDoc);
     assignDistanceToWaypoints(waypoints, allTrackpoints);
-
-    // Extract the stage title from the first track's name element
-    const trkElements = xmlDoc.getElementsByTagName('trk');
-    let stageTitle = 'Unknown'; // Default to 'Unknown'
-    if (trkElements.length > 0) {
-        const firstTrkNameElement = trkElements[0].getElementsByTagName('name')[0]?.textContent;
-        if (firstTrkNameElement) {
-            stageTitle = firstTrkNameElement;
-        }
-    }
-
-    // Set the stageTitle in Redux
-    store.dispatch(setStageTitle(stageTitle));
-
     store.dispatch(setWaypoints(waypoints));
     return { waypoints, tracks, allTrackpoints, minY, maxY };
 };
-
 
 export const parseCustomGPX = (xmlDoc) => {
     return parseStandardGPX(xmlDoc);

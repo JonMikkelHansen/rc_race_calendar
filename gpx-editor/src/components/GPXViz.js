@@ -66,6 +66,30 @@ const GPXViz = () => {
         }
     }, [trackpoints, dispatch]);
 
+    // Listen for changes in showAnnotations
+    useEffect(() => {
+      if (showAnnotations) {
+        // Create annotations for waypoints dynamically
+        const waypointAnnotations = waypoints
+          .filter(waypoint => waypoint.isWaypoint)
+          .map(waypoint => ({
+            type: 'line',
+            mode: 'vertical',
+            scaleID: 'x',
+            value: waypoint.distanceFromStart / 1000,
+            borderColor: 'rgba(255, 0, 0, 0.5)',
+            borderWidth: 1,
+            borderDash: [5, 5],
+          }));
+
+        // Dispatch the action to set showAnnotations to true
+        dispatch(setShowAnnotations(true));
+      } else {
+        // Dispatch the action to set showAnnotations to false
+        dispatch(setShowAnnotations(false));
+      }
+    }, [showAnnotations, waypoints, dispatch]);
+
     const handleInputChange = (action) => (e) => {
         dispatch(action(parseFloat(e.target.value)));
     };
@@ -85,35 +109,74 @@ const GPXViz = () => {
 
     const data = {
       datasets: [{
-          label: 'Elevation',
-          data: simplifiedData,
-          showLine: true,
-          fill: false,
-          borderColor: 'rgb(75, 192, 192)',
-          tension: reduxTension,
-          pointRadius: simplifiedData.map(point => 
-              point.isWaypoint && showWaypoints ? 4 : showTrackpoints ? 2 : 0),
-          pointBackgroundColor: simplifiedData.map(point => 
-              point.isWaypoint && showWaypoints ? 'red' : 'rgb(75, 192, 192)'),
+        label: 'Elevation',
+        data: simplifiedData,
+        showLine: true,
+        fill: {
+          target: 'origin', // Fill down to the origin (0)
+          above: 'rgba(75, 192, 192, 0.2)', // Fill color above the line
+        },
+        borderColor: 'rgb(75, 192, 192)',
+        tension: reduxTension,
+        pointRadius: simplifiedData.map(point => 
+            point.isWaypoint && showWaypoints ? 4 : showTrackpoints ? 2 : 0),
+        pointBackgroundColor: simplifiedData.map(point => 
+            point.isWaypoint && showWaypoints ? 'red' : 'rgb(75, 192, 192)'),
       }]
     };
+    
 
     const options = {
-        scales: {
-            y: { min: reduxMinY, max: reduxMaxY },
-            x: {
-                type: 'linear',
-                position: 'bottom',
-                title: { display: true, text: 'Distance (km)' },
-                max: maxDistanceKm,
-            }
+      scales: {
+        y: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: 'Elevation' },
+          min: reduxMinY,
+          max: reduxMaxY,
         },
-        elements: {
-            line: {
-                tension: 0 // Ensures lines are straight
-            }
+        x: {
+          type: 'linear',
+          position: 'bottom',
+          title: { display: true, text: 'Distance (km)' },
+          max: maxDistanceKm,
         },
+      },
+      elements: {
+        line: {
+          tension: 0,
+        },
+      },
+      plugins: {
+        annotation: {
+          annotations: {
+            fillBelowZero: {
+              type: 'box',
+              xMin: 0,
+              xMax: maxDistanceKm,
+              yMin: 0,
+              yMax: reduxMinY,
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderWidth: 0,
+            },
+            // Add waypoint annotations dynamically
+            ...waypoints
+              .filter(waypoint => waypoint.isWaypoint)
+              .map(waypoint => ({
+                type: 'line',
+                mode: 'vertical',
+                scaleID: 'x',
+                value: waypoint.distanceFromStart / 1000, // x-coordinate
+                borderColor: 'rgba(255, 0, 0, 0.5)', // Dotted line color
+                borderWidth: 1,
+                borderDash: [5, 5], // Dotted line style
+              })),
+          },
+        },
+      },
     };
+    
+    
     
     return (
       <div>
