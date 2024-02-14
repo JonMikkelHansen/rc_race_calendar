@@ -1,5 +1,5 @@
 import { calculateHaversineDistance } from '../Utilities';
-import { setMinY, setMaxY, setTrackpoints, setWaypoints } from '../redux/actions/GPXActions';
+import { setMinY, setMaxY, setTrackpoints, setWaypoints, setStageTitle } from '../redux/actions/GPXActions';
 import store from '../redux/store';
 
 const calculateAverageElevation = (prevElevation, nextElevation) => {
@@ -120,6 +120,20 @@ export const parseStandardGPX = (xmlDoc) => {
     const waypoints = parseWaypoints(xmlDoc);
     const { tracks, allTrackpoints, minY, maxY } = parseTracks(xmlDoc);
     assignDistanceToWaypoints(waypoints, allTrackpoints);
+
+    // Extract the stage title from the first track's name element
+    const trkElements = xmlDoc.getElementsByTagName('trk');
+    let stageTitle = 'Unknown'; // Default to 'Unknown'
+    if (trkElements.length > 0) {
+        const firstTrkNameElement = trkElements[0].getElementsByTagName('name')[0]?.textContent;
+        if (firstTrkNameElement) {
+            stageTitle = firstTrkNameElement;
+        }
+    }
+
+    // Set the stageTitle in Redux
+    store.dispatch(setStageTitle(stageTitle));
+    
     store.dispatch(setWaypoints(waypoints));
     return { waypoints, tracks, allTrackpoints, minY, maxY };
 };

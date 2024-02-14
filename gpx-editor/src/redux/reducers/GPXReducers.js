@@ -9,7 +9,7 @@ const initialState = {
   minY: 0,
   maxY: 0,
   tolerance: 100,
-  tension: 0,
+  tension: 0.2,
   trackpoints: [],
   waypoints: [],
   showTrackpoints: false,

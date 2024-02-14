@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="www.plotaroute.com" version="1.1"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<metadata>
+<desc>Route created on plotaroute.com</desc>
+</metadata>
+<wpt lat="-34.928402" lon="138.60352">
+<time>2023-06-19T00:00:00Z</time>
+<name>START LAP</name>
+<cmt>Race Start
+Wakefield Street near Wakefield Hotel, Adelaide - heading east
+Start Lap</cmt>
+<desc>Race Start
+Wakefield Street near Wakefield Hotel, Adelaide - heading east
+Start Lap</desc>
+<sym>Flag, Blue</sym>
+<type>Waypoint</type>
+</wpt>
+<wpt lat="-34.928286" lon="138.6060006">
+<time>2023-06-19T00:00:41Z</time>
+<name>Left turn </name>
+<cmt>Left turn on to Pulteney Street, Adelaide</cmt>
+<desc>Left turn on to Pulteney Street, Adelaide</desc>
+<sym>Left</sym>
+<type>Waypoint</type>
+</wpt>
+<wpt lat="-34.9268541" lon="138.605888">
+<time>2023-06-19T00:01:10Z</time>
+<name>Left turn </name>
+<cmt>Left turn on to Flinders Street, Adelaide</cmt>
+<desc>Left turn on to Flinders Street, Adelaide</desc>
+<sym>Left</sym>
+<type>Waypoint</type>
+</wpt>
+<wpt lat="-34.927158" lon="138.599967">
+<time>2023-06-19T00:02:47Z</time>
+<name>Sharp left</name>
+<cmt>Sharp left turn on to King William Street, Adelaide</cmt>
+<desc>Sharp left turn on to King William Street, Adelaide</desc>
+<sym>Left_sharp</sym>
+<type>Waypoint</type>
+</wpt>
+<wpt lat="-34.92852" lon="138.600746">
+<time>2023-06-19T00:03:18Z</time>
+<name>Left turn </name>
+<cmt>Left turn on to Wakefield Street, Adelaide</cmt>
+<desc>Left turn on to Wakefield Street, Adelaide</desc>
+<sym>Left</sym>
+<type>Waypoint</type>
+</wpt>
+<wpt lat="-34.928404" lon="138.603468">
+<time>2023-06-19T00:04:02Z</time>
+<name>END LAP</name>
+<cmt>Wakefield Street near Wakefield Hotel, Adelaide
+End Lap</cmt>
+<desc>Wakefield Street near Wakefield Hotel, Adelaide
+End Lap</desc>
+<sym>Flag, Blue</sym>
+<type>Waypoint</type>
+</wpt>
+<trk>
+<name>2024 - M Classic - Criterium Circuit</name>
+<trkseg>
+<trkpt lat="-34.928402" lon="138.60352">
+<ele>57</ele>
+<time>2023-06-19T00:00:00Z</time></trkpt>
+<trkpt lat="-34.928402" lon="138.60352">
+<ele>57</ele>
+<time>2023-06-19T00:00:00Z</time></trkpt>
+<trkpt lat="-34.928286" lon="138.606001">
+<ele>55</ele>
+<time>2023-06-19T00:00:41Z</time></trkpt>
+<trkpt lat="-34.928286" lon="138.6060006">
+<ele>55</ele>
+<time>2023-06-19T00:00:41Z</time></trkpt>
+<trkpt lat="-34.928286" lon="138.606001">
+<ele>55</ele>
+<time>2023-06-19T00:00:41Z</time></trkpt>
+<trkpt lat="-34.9268541" lon="138.605888">
+<ele>59</ele>
+<time>2023-06-19T00:01:10Z</time></trkpt>
+<trkpt lat="-34.926854" lon="138.605888">
+<ele>59</ele>
+<time>2023-06-19T00:01:10Z</time></trkpt>
+<trkpt lat="-34.927057" lon="138.601917">
+<ele>77</ele>
+<time>2023-06-19T00:02:15Z</time></trkpt>
+<trkpt lat="-34.927057" lon="138.601917">
+<ele>77</ele>
+<time>2023-06-19T00:02:15Z</time></trkpt>
+<trkpt lat="-34.9271101" lon="138.6008811">
+<ele>66</ele>
+<time>2023-06-19T00:02:32Z</time></trkpt>
+<trkpt lat="-34.92711" lon="138.600881">
+<ele>66</ele>
+<time>2023-06-19T00:02:32Z</time></trkpt>
+<trkpt lat="-34.927155" lon="138.600005">
+<ele>62</ele>
+<time>2023-06-19T00:02:46Z</time></trkpt>
+<trkpt lat="-34.927155" lon="138.600005">
+<ele>62</ele>
+<time>2023-06-19T00:02:46Z</time></trkpt>
+<trkpt lat="-34.927158" lon="138.599967">
+<ele>62</ele>
+<time>2023-06-19T00:02:47Z</time></trkpt>
+<trkpt lat="-34.927334" lon="138.600074">
+<ele>62</ele>
+<time>2023-06-19T00:02:51Z</time></trkpt>
+<trkpt lat="-34.927334" lon="138.600074">
+<ele>62</ele>
+<time>2023-06-19T00:02:51Z</time></trkpt>
+<trkpt lat="-34.92796" lon="138.600563">
+<ele>62</ele>
+<time>2023-06-19T00:03:06Z</time></trkpt>
+<trkpt lat="-34.92796" lon="138.600563">
+<ele>62</ele>
+<time>2023-06-19T00:03:06Z</time></trkpt>
+<trkpt lat="-34.928146" lon="138.600669">
+<ele>61</ele>
+<time>2023-06-19T00:03:10Z</time></trkpt>
+<trkpt lat="-34.928146" lon="138.600669">
+<ele>61</ele>
+<time>2023-06-19T00:03:10Z</time></trkpt>
+<trkpt lat="-34.9283359" lon="138.6007261">
+<ele>61</ele>
+<time>2023-06-19T00:03:14Z</time></trkpt>
+<trkpt lat="-34.92852" lon="138.600746">
+<ele>59</ele>
+<time>2023-06-19T00:03:18Z</time></trkpt>
+<trkpt lat="-34.928404" lon="138.603468">
+<ele>57</ele>
+<time>2023-06-19T00:04:02Z</time></trkpt>
+</trkseg>
+</trk>
+</gpx>
