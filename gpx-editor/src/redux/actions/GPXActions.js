@@ -1,3 +1,11 @@
+// Actions for fetching an selecting races and stages
+import { fetchRaces, fetchRacesForSeasons } from '../../components/api';
+
+export const FETCH_RACES_SUCCESS = 'FETCH_RACES_SUCCESS';
+export const SET_SEASONS = 'SET_SEASONS'; // New action type for setting seasons
+export const SELECT_RACE = 'SELECT_RACE';
+export const SELECT_STAGE = 'SELECT_STAGE';
+
 // Existing action types and creators
 
 export const SET_TOLERANCE = 'SET_TOLERANCE';
@@ -80,4 +88,40 @@ export const SET_STAGE_TITLE = 'SET_STAGE_TITLE'; // New action type
 export const setStageTitle = (title) => ({
   type: SET_STAGE_TITLE,
   payload: title,
+});
+
+
+
+// Async action creator for fetching races
+export const fetchRacesAsync = (season) => async (dispatch) => {
+  try {
+    const races = await fetchRaces(season);
+    dispatch({ type: FETCH_RACES_SUCCESS, payload: races });
+  } catch (error) {
+    console.error("Error fetching races for season:", error);
+    // Handle error
+  }
+};
+
+// New action creator for fetching all seasons
+export const fetchAllSeasons = () => async (dispatch) => {
+  try {
+    const races = await fetchRacesForSeasons();
+    const seasons = Array.from(new Set(races.map(race => race.season))).sort((a, b) => a - b);
+    dispatch({ type: SET_SEASONS, payload: seasons });
+  } catch (error) {
+    console.error("Error fetching all seasons:", error);
+    // Handle error
+  }
+};
+
+// Action creators for selecting a race and a stage
+export const selectRace = (raceId) => ({
+  type: SELECT_RACE,
+  payload: raceId,
+});
+
+export const selectStage = (stageId) => ({
+  type: SELECT_STAGE,
+  payload: stageId,
 });

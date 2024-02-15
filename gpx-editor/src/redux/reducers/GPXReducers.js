@@ -1,11 +1,17 @@
 import { 
+  FETCH_RACES_SUCCESS, SELECT_RACE, SELECT_STAGE,
   SET_MINY, SET_MAXY, SET_TOLERANCE, SET_TENSION, 
   SET_TRACKPOINTS, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT,
   SET_SHOW_TRACKPOINTS, SET_SHOW_WAYPOINTS, SET_SHOW_ANNOTATIONS,
   SET_STAGE_TITLE // Import the new action type
 } from '../actions/GPXActions';
 
+
+
 const initialState = {
+  races: [],
+  selectedRace: null,
+  selectedStage: null,
   minY: 0,
   maxY: 0,
   tolerance: 100,
@@ -20,6 +26,12 @@ const initialState = {
 
 const GPXReducer = (state = initialState, action) => {
   switch (action.type) {
+    case FETCH_RACES_SUCCESS:
+      return { ...state, races: action.payload };
+    case SELECT_RACE:
+      return { ...state, selectedRace: action.payload, selectedStage: null }; // Reset selectedStage when a new race is selected
+    case SELECT_STAGE:
+      return { ...state, selectedStage: action.payload };
     case SET_MINY:
       return { ...state, minY: action.payload };
     case SET_MAXY:

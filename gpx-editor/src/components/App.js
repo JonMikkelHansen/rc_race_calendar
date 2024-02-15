@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import RaceList from './RaceList';
 import GPXUploader from './GPXUploader';
 import GPXViz from './GPXViz';
 import WaypointEditor from './WaypointEditor';
@@ -13,6 +14,7 @@ function App() {
 
   return (
     <div className="App">
+      <RaceList />
       <h1>GPX Data Manager</h1>
       <GPXUploader onGPXData={handleGPXData} />
       {gpxData && (

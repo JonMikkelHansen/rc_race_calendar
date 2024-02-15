@@ -724,12 +724,6 @@ export interface ApiRaceRace extends Schema.CollectionType {
       'oneToMany',
       'api::series.series'
     >;
-    season: Attribute.BigInteger &
-      Attribute.Required &
-      Attribute.SetMinMax<{
-        min: '2000';
-        max: '9999';
-      }>;
     external_link: Attribute.String;
     number_of_stages: Attribute.Integer &
       Attribute.SetMinMax<{
@@ -739,6 +733,11 @@ export interface ApiRaceRace extends Schema.CollectionType {
     race_type: Attribute.Enumeration<
       ['Classic', 'Stage Race', 'One-day race', 'Grand Tour']
     >;
+    season: Attribute.BigInteger &
+      Attribute.SetMinMax<{
+        min: '1000';
+        max: '9999';
+      }>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

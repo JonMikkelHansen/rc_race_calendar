@@ -1,12 +1,11 @@
 import axios from 'axios';
 
-// Example correction in api.js
-const BASE_URL = process.env.REACT_APP_STRAPI_BASE_URL; // Ensure this matches your .env file
+const BASE_URL = process.env.REACT_APP_STRAPI_BASE_URL;
 
-export const fetchRaces = async () => {
+// Fetch races filtered by season
+export const fetchRaces = async (season) => {
   try {
-    const response = await axios.get(`${BASE_URL}/api/races`);
-    // Map over the data array to transform it into a simpler array of objects
+    const response = await axios.get(`${BASE_URL}/api/races?filters[season]=${season}&pagination[pageSize]=100`);
     return response.data.data.map(item => ({
       id: item.id,
       ...item.attributes,
@@ -17,3 +16,16 @@ export const fetchRaces = async () => {
   }
 };
 
+// Fetch all races to extract seasons
+export const fetchRacesForSeasons = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/races?pagination[pageSize]=1000`); // Adjust as necessary
+    return response.data.data.map(item => ({
+      id: item.id,
+      ...item.attributes,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch races for seasons extraction:", error);
+    throw error;
+  }
+};

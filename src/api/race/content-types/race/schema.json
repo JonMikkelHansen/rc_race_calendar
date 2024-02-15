@@ -31,12 +31,6 @@
       "target": "api::series.series",
       "mappedBy": "race"
     },
-    "season": {
-      "type": "biginteger",
-      "max": "9999",
-      "required": true,
-      "min": "2000"
-    },
     "external_link": {
       "type": "string"
     },
@@ -53,6 +47,11 @@
         "One-day race",
         "Grand Tour"
       ]
+    },
+    "season": {
+      "type": "biginteger",
+      "max": "9999",
+      "min": "1000"
     }
   }
 }
