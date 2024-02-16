@@ -7,7 +7,6 @@ import {
 } from '../actions/GPXActions';
 
 
-
 const initialState = {
   races: [],
   selectedRace: null,
@@ -29,7 +28,7 @@ const GPXReducer = (state = initialState, action) => {
     case FETCH_RACES_SUCCESS:
       return { ...state, races: action.payload };
     case SELECT_RACE:
-      return { ...state, selectedRace: action.payload, selectedStage: null }; // Reset selectedStage when a new race is selected
+      return { ...state, selectedRace: action.payload }; // Reset selectedStage when a new race is selected
     case SELECT_STAGE:
       return { ...state, selectedStage: action.payload };
     case SET_MINY:
