@@ -26,7 +26,7 @@ const initialState = {
 const GPXReducer = (state = initialState, action) => {
   switch (action.type) {
     case FETCH_RACES_SUCCESS:
-      return { ...state, races: action.payload };
+      return { ...state, races: [...action.payload] };
     case SELECT_RACE:
       return { ...state, selectedRace: action.payload }; // Reset selectedStage when a new race is selected
     case SELECT_STAGE:

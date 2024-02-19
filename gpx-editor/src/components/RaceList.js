@@ -32,7 +32,11 @@ function RaceList() {
   const [selectedSeason, setSelectedSeason] = useState(new Date().getFullYear());
 
   useEffect(() => {
-    dispatch(fetchAllSeasons());
+        // Dispatch fetchAllSeasons to populate season dropdown options
+        dispatch(fetchAllSeasons());
+
+        // Immediately fetch races for the selected season (current year) on component mount
+        dispatch(fetchRacesAsync(selectedSeason.toString()));
   }, [dispatch]);
 
   useEffect(() => {
@@ -59,7 +63,7 @@ function RaceList() {
         <option value={2024}>2024</option>
       </select>
       
-      <ul>
+      <ul key={selectedSeason}>
         {sortedRaces.length > 0 ? sortedRaces.map(race => (
           <li key={race.id}>
             <div onClick={() => handleRaceSelect(race.id)}>

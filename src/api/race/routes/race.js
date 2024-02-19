@@ -1,37 +1,24 @@
-'use strict';
+// Not an actual file you need to create or edit for basic CRUD operations
+// Just a conceptual representation
 
-/**
- * race router
- */
-
-const { createCoreRouter, createCoreController } = require('@strapi/strapi').factories;
-
-module.exports = createCoreRouter('api::race.race', {
-  config: {
-    find: {
-      auth: false,
-    },
-    findOne: {
-      auth: false,
-    },
-    create: {
-      auth: false,
-    },
-    update: {
-      auth: false,
-    },
-    delete: {
-      auth: false,
-    },
-  },
-  routes: [ // Ensure the custom route is defined within a 'routes' array
+module.exports = {
+  routes: [
     {
       method: 'GET',
-      path: '/races-with-stages', // This custom path will handle the request
-      handler: 'api::race.race.findWithStages', // Points to the custom controller method
+      path: '/races',
+      handler: 'race.find',
       config: {
-        auth: false, // Specifies authentication configuration; adjust as needed
+        auth: false,
       },
     },
+    {
+      method: 'GET',
+      path: '/races/:id',
+      handler: 'race.findOne',
+      config: {
+        auth: false,
+      },
+    },
+    // POST, PUT, DELETE routes for CRUD operations
   ],
-});
+};

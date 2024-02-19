@@ -95,11 +95,11 @@ export const setStageTitle = (title) => ({
 // Async action creator for fetching races
 export const fetchRacesAsync = (season) => async (dispatch) => {
   try {
-    const races = await fetchRaces(season);
+    const races = await fetchRaces(season); // Make sure this call uses the season parameter correctly
     dispatch({ type: FETCH_RACES_SUCCESS, payload: races });
   } catch (error) {
-    console.error("Error fetching races for season:", error);
-    // Handle error
+    console.error("Error fetching races:", error);
+    // Potentially dispatch an error action here
   }
 };
 
