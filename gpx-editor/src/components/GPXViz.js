@@ -29,7 +29,7 @@ const GPXViz = () => {
 
     return (
         <div>
-            <h2>Height Profile:&nbsp;
+            <h2>Stage:&nbsp;
                 {isEditing ? (
                     <input
                         type="text"

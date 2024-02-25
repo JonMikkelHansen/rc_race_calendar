@@ -14,8 +14,8 @@ function App() {
 
   return (
     <div className="App">
-      <RaceList />
-      <h2>GPX Data Manager</h2>
+      {/*<RaceList /> */}
+      <h2>Road Code GPX Editor</h2>
       <GPXUploader onGPXData={handleGPXData} />
       {gpxData && (
         <>
