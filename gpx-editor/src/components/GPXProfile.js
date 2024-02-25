@@ -46,13 +46,13 @@ const GPXProfile = () => {
         if (trackpoints.length > 0) {
             const simplifiedTrackPoints = douglasPeucker(trackpoints, reduxTolerance);
             const dataWithWaypointInfo = simplifiedTrackPoints.map(point => ({
-                x: point.distanceFromStart / 1000,
+                x: point.distanceFromStart,
                 y: point.elevation,
                 isWaypoint: waypoints.some(wp => wp.id === point.waypointID)
             }));
             setSimplifiedData(dataWithWaypointInfo);
 
-            const maxDistance = simplifiedTrackPoints.reduce((max, p) => Math.max(max, p.distanceFromStart), 0) / 1000;
+            const maxDistance = simplifiedTrackPoints.reduce((max, p) => Math.max(max, p.distanceFromStart), 0);
             setMaxDistanceKm(maxDistance.toFixed(2));
         }
     }, [trackpoints, reduxTolerance, waypoints]);
@@ -133,7 +133,7 @@ const GPXProfile = () => {
                         type: 'line',
                         mode: 'vertical',
                         scaleID: 'x',
-                        value: waypoint.distanceFromStart / 1000,
+                        value: waypoint.distanceFromStart,
                         borderColor: 'rgba(255, 0, 0, 0.5)',
                         borderWidth: 1,
                         borderDash: [5, 5],

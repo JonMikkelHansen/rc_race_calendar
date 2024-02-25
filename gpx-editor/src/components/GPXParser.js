@@ -72,13 +72,15 @@ const parseTracks = (xmlDoc) => {
                     if (lastLat !== null && lastLon !== null) {
                         segmentDistance += calculateHaversineDistance(lastLat, lastLon, lat, lon);
                     }
+                    
+                    const distanceFromStart = +(segmentDistance / 1000).toFixed(3);
 
                     allTrackpoints.push({
                         id: `trackpoint-${trackpointIdCounter++}`,
                         latitude: lat,
                         longitude: lon,
                         elevation,
-                        distanceFromStart: segmentDistance,
+                        distanceFromStart,
                         isWaypoint: false, // Initialize all trackpoints with isWaypoint set to false
                         waypointID: null // Initialize waypointID as null
                     });

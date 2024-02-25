@@ -56,7 +56,7 @@ export const WaypointEditor = () => {
             <ul>
                 {waypoints.map((waypoint) => (
                     <li key={waypoint.id}>
-                        {`${(waypoint.distanceFromStart / 1000).toFixed(2)} km, ${waypoint.name}, ${waypoint.elevation}m `}
+                        {`${(waypoint.distanceFromStart).toFixed(2)} km, ${waypoint.name}, ${waypoint.elevation}m `}
                         <button onClick={() => handleEditClick(waypoint)}>Edit</button>
                         <button onClick={() => handleDeleteClick(waypoint.id)}>Delete</button>
                     </li>
