@@ -1,29 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateWaypoint, deleteWaypoint } from '../redux/actions/GPXActions'; // Assume deleteWaypoint action exists
+import { updateWaypoint, deleteWaypoint, addWaypoint } from '../redux/actions/GPXActions';
 
 export const WaypointEditor = () => {
-    const waypoints = useSelector(state => state.waypoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart)); // Sorting waypoints by distance
+    const waypoints = useSelector(state => state.waypoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart));
+    const trackpoints = useSelector(state => state.trackpoints); // Accessing trackpoints from the Redux store
     const dispatch = useDispatch();
     const [editWaypointId, setEditWaypointId] = useState(null);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [elevation, setElevation] = useState(0);
-    const [distance, setDistance] = useState(0); // Distance in kilometers for UI
+    const [distance, setDistance] = useState(0); // Distance should remain in the unit it is used in the UI
+
+    // Function to find nearest trackpoint's elevation based on distance
+    const findNearestTrackpointElevation = (waypointDistance) => {
+        const closest = trackpoints.reduce((prev, curr) => {
+            return Math.abs(curr.distanceFromStart - waypointDistance) < Math.abs(prev.distanceFromStart - waypointDistance) ? curr : prev;
+        });
+        return closest.elevation;
+    };
+
+    useEffect(() => {
+        if (editWaypointId !== null) { // Only update elevation if in edit or create mode
+            const nearestElevation = findNearestTrackpointElevation(distance);
+            setElevation(nearestElevation);
+        }
+    }, [distance, editWaypointId, trackpoints]);
 
     const handleEditClick = (waypoint) => {
         setEditWaypointId(waypoint.id);
         setName(waypoint.name);
         setDescription(waypoint.description || '');
         setElevation(waypoint.elevation || 0);
-        setDistance(waypoint.distanceFromStart / 1000 || 0); // Convert meters to kilometers
+        setDistance(waypoint.distanceFromStart); // Keeping the distance as is without converting
     };
 
     const handleDeleteClick = (waypointId) => {
         const isConfirmed = window.confirm("Are you sure you want to delete this waypoint?");
         if (isConfirmed) {
             dispatch(deleteWaypoint(waypointId));
-            // Reset form if the deleted waypoint was being edited
             if (waypointId === editWaypointId) {
                 resetForm();
             }
@@ -32,13 +47,18 @@ export const WaypointEditor = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        dispatch(updateWaypoint({
-            id: editWaypointId,
+        const waypointData = {
+            id: editWaypointId === 'new' ? undefined : editWaypointId,
             name,
             description,
             elevation,
-            distanceFromStart: distance * 1000, // Convert back to meters
-        }));
+            distanceFromStart: distance, // Keeping the unit consistent with the UI and data model
+        };
+        if (editWaypointId === 'new') {
+            dispatch(addWaypoint(waypointData));
+        } else {
+            dispatch(updateWaypoint(waypointData));
+        }
         resetForm();
     };
 
@@ -50,24 +70,30 @@ export const WaypointEditor = () => {
         setDistance(0);
     };
 
+    const handleAddClick = () => {
+        resetForm();
+        setEditWaypointId('new');
+    };
+
     return (
         <div>
             <h3>Edit Waypoints</h3>
             <ul>
                 {waypoints.map((waypoint) => (
                     <li key={waypoint.id}>
-                        {`${(waypoint.distanceFromStart).toFixed(2)} km, ${waypoint.name}, ${waypoint.elevation}m `}
+                        {`${waypoint.distanceFromStart}m, ${waypoint.name}, ${waypoint.elevation}m `}
                         <button onClick={() => handleEditClick(waypoint)}>Edit</button>
                         <button onClick={() => handleDeleteClick(waypoint.id)}>Delete</button>
                     </li>
                 ))}
+                <li><button onClick={handleAddClick}>Create waypoint</button></li>
             </ul>
-            {editWaypointId && (
+            {(editWaypointId || name || description || elevation || distance) && (
                 <form onSubmit={handleSubmit}>
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Waypoint Name" />
                     <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />
-                    <input type="number" value={elevation} onChange={(e) => setElevation(parseFloat(e.target.value))} placeholder="Elevation" />
-                    <input type="number" step="0.01" value={distance} onChange={(e) => setDistance(parseFloat(e.target.value))} placeholder="Distance from Start (km)" />
+                    <input type="number" value={elevation} onChange={(e) => setElevation(parseFloat(e.target.value))} placeholder="Elevation (m)" />
+                    <input type="number" value={distance} onChange={(e) => setDistance(parseFloat(e.target.value))} placeholder="Distance from Start (m)" />
                     <button type="submit">Save Changes</button>
                     <button type="button" onClick={resetForm}>Cancel</button>
                 </form>
