@@ -1,5 +1,6 @@
 // Actions for fetching an selecting races and stages
 import { fetchRaces, fetchRacesForSeasons } from '../../components/api';
+import { v4 as uuidv4 } from 'uuid';
 
 export const FETCH_RACES_SUCCESS = 'FETCH_RACES_SUCCESS';
 export const SET_SEASONS = 'SET_SEASONS'; // New action type for setting seasons
@@ -47,7 +48,7 @@ export const setWaypoints = (waypoints) => ({
 export const ADD_WAYPOINT = 'ADD_WAYPOINT';
 export const addWaypoint = (waypoint) => ({
   type: ADD_WAYPOINT,
-  payload: waypoint,
+  payload: { ...waypoint, id: uuidv4() }, // Generate a unique ID for the waypoint
 });
 
 export const DELETE_WAYPOINT = 'DELETE_WAYPOINT';
@@ -62,7 +63,39 @@ export const updateWaypoint = (waypoint) => ({
   payload: waypoint,
 });
 
+export const ADD_SEGMENT = 'ADD_SEGMENT';
+export const addSegment = ({ name, startDistance, endDistance, startTrackpoint, endTrackpoint }) => ({
+  type: ADD_SEGMENT,
+  payload: {
+    id: uuidv4(), // Ensure each segment has a unique ID
+    name,
+    startDistance,
+    endDistance,
+    startTrackpoint: { ...startTrackpoint, inputDistance: startDistance },
+    endTrackpoint: { ...endTrackpoint, inputDistance: endDistance },
+  },
+});
 
+export const EDIT_SEGMENT = 'EDIT_SEGMENT';
+export const editSegment = (segmentId, { name, startDistance, endDistance, startTrackpoint, endTrackpoint }) => ({
+  type: EDIT_SEGMENT,
+  payload: {
+    segmentId,
+    updatedSegment: {
+      name,
+      startDistance,
+      endDistance,
+      startTrackpoint: { ...startTrackpoint, inputDistance: startDistance },
+      endTrackpoint: { ...endTrackpoint, inputDistance: endDistance },
+    },
+  },
+});
+
+export const DELETE_SEGMENT = 'DELETE_SEGMENT';
+export const deleteSegment = (segmentId) => ({
+  type: DELETE_SEGMENT,
+  payload: segmentId,
+});
 
 
 export const SET_SHOW_TRACKPOINTS = 'SET_SHOW_TRACKPOINTS';

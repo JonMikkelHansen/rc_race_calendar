@@ -3,6 +3,7 @@ import RaceList from './RaceList';
 import GPXUploader from './GPXUploader';
 import GPXViz from './GPXViz';
 import WaypointEditor from './WaypointEditor';
+import SegmentEditor from './SegmentEditor';
 import GPXSave from './GPXSave'; // Import GPXSave component
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <>
           <GPXViz gpxData={gpxData} />
           <WaypointEditor gpxData={gpxData} onEdit={handleGPXData} />
+          <SegmentEditor gpxData={gpxData} onEdit={handleGPXData} />
           <GPXSave /> {/* Add Save GPX component here */}
         </>
       )}

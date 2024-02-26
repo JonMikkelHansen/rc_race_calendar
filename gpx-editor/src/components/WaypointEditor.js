@@ -81,14 +81,14 @@ export const WaypointEditor = () => {
             <ul>
                 {waypoints.map((waypoint) => (
                     <li key={waypoint.id}>
-                        {`${waypoint.distanceFromStart}m, ${waypoint.name}, ${waypoint.elevation}m `}
+                        {`${waypoint.distanceFromStart.toFixed(2)}km, ${waypoint.name}, ${waypoint.elevation}m `}
                         <button onClick={() => handleEditClick(waypoint)}>Edit</button>
                         <button onClick={() => handleDeleteClick(waypoint.id)}>Delete</button>
                     </li>
                 ))}
                 <li><button onClick={handleAddClick}>Create waypoint</button></li>
             </ul>
-            {(editWaypointId || name || description || elevation || distance) && (
+            {((editWaypointId !== null && editWaypointId !== undefined) || name !== '' || description !== '' || elevation !== 0 || distance !== 0) && (
                 <form onSubmit={handleSubmit}>
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Waypoint Name" />
                     <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />

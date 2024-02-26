@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { calculateHaversineDistance } from '../Utilities';
 import { setMinY, setMaxY, setTrackpoints, setWaypoints, setStageTitle } from '../redux/actions/GPXActions';
 import store from '../redux/store';
@@ -22,7 +23,7 @@ const parseWaypoints = (xmlDoc) => {
 
         if (!isNaN(lat) && !isNaN(lon) && !name.startsWith("KM")) {
             waypoints.push({
-                id: `waypoint-${Date.now()}-${i}`, // Unique ID
+                id: uuidv4(), // Use UUID to generate a unique ID for the waypoint
                 latitude: lat,
                 longitude: lon,
                 name: name,
