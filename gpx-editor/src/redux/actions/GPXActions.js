@@ -64,32 +64,54 @@ export const updateWaypoint = (waypoint) => ({
 });
 
 export const ADD_SEGMENT = 'ADD_SEGMENT';
-export const addSegment = ({ name, startDistance, endDistance, startTrackpoint, endTrackpoint }) => ({
-  type: ADD_SEGMENT,
-  payload: {
-    id: uuidv4(), // Ensure each segment has a unique ID
-    name,
-    startDistance,
-    endDistance,
-    startTrackpoint: { ...startTrackpoint, inputDistance: startDistance },
-    endTrackpoint: { ...endTrackpoint, inputDistance: endDistance },
-  },
-});
+export const addSegment = ({ name, startDistance, endDistance }) => {
+  return (dispatch, getState) => {
+    const { trackpoints } = getState(); // Assuming you have access to trackpoints here
+    const trackpointIndices = trackpoints.reduce((acc, { distanceFromStart }, index) => {
+      if (distanceFromStart >= startDistance && distanceFromStart <= endDistance) {
+        acc.push(index);
+      }
+      return acc;
+    }, []);
+
+    dispatch({
+      type: ADD_SEGMENT,
+      payload: {
+        id: uuidv4(),
+        name,
+        startDistance,
+        endDistance,
+        trackpointIndices,
+      },
+    });
+  };
+};
 
 export const EDIT_SEGMENT = 'EDIT_SEGMENT';
-export const editSegment = (segmentId, { name, startDistance, endDistance, startTrackpoint, endTrackpoint }) => ({
-  type: EDIT_SEGMENT,
-  payload: {
-    segmentId,
-    updatedSegment: {
-      name,
-      startDistance,
-      endDistance,
-      startTrackpoint: { ...startTrackpoint, inputDistance: startDistance },
-      endTrackpoint: { ...endTrackpoint, inputDistance: endDistance },
-    },
-  },
-});
+export const editSegment = (segmentId, { name, startDistance, endDistance }) => {
+  return (dispatch, getState) => {
+    const { trackpoints } = getState(); // Accessing trackpoints from state
+    const trackpointIndices = trackpoints.reduce((acc, { distanceFromStart }, index) => {
+      if (distanceFromStart >= startDistance && distanceFromStart <= endDistance) {
+        acc.push(index);
+      }
+      return acc;
+    }, []);
+
+    dispatch({
+      type: EDIT_SEGMENT,
+      payload: {
+        segmentId,
+        updatedSegment: {
+          name,
+          startDistance,
+          endDistance,
+          trackpointIndices,
+        },
+      },
+    });
+  };
+};
 
 export const DELETE_SEGMENT = 'DELETE_SEGMENT';
 export const deleteSegment = (segmentId) => ({

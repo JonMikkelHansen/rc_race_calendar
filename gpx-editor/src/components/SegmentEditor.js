@@ -30,11 +30,22 @@ export const SegmentEditor = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+    
+        // Calculate trackpoint indices that fall within the segment's range
+        const trackpointIndices = trackpoints.reduce((indices, trackpoint, index) => {
+            const distance = trackpoint.distanceFromStart;
+            if (distance >= parseFloat(startDistance) && distance <= parseFloat(endDistance)) {
+                indices.push(index); // Add the index of the trackpoint within the segment range
+            }
+            return indices;
+        }, []);
+    
         const segmentData = {
             id: editingSegmentId, // Preserve the ID if editing
             name: segmentName,
             startDistance: parseFloat(startDistance),
             endDistance: parseFloat(endDistance),
+            trackpointIndices, // Include the calculated trackpoint indices
         };
         
         if (editingSegmentId) {
