@@ -114,4 +114,45 @@ export function perpendicularDistance(point, line) {
   }
 }
 
+
+/**
+ * Interpolates lat, lon, and elevation for a given distance from start, based on surrounding trackpoints.
+ * @param {number} distance - The distance from the start for which to interpolate the trackpoint data.
+ * @param {Array} trackpoints - An array of trackpoints, each with lat, lon, distanceFromStart, and elevation properties.
+ * @return {Object} An object containing interpolated lat, lon, and elevation values.
+ */
+const interpolateTrackpointData = (distance, trackpoints) => {
+  if (!trackpoints.length) return null; // Guard clause for empty trackpoints array
+
+  const maxDistance = trackpoints[trackpoints.length - 1].distanceFromStart;
+  if (distance >= maxDistance) {
+      // Return the last trackpoint data directly if distance is at or beyond the last trackpoint
+      const { lat, lon, elevation } = trackpoints[trackpoints.length - 1];
+      return { lat, lon, elevation };
+  }
+
+  const sortedTrackpoints = trackpoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
+  let before = sortedTrackpoints[0], after = sortedTrackpoints[1];
+
+  for (let i = 1; i < sortedTrackpoints.length; i++) {
+      if (sortedTrackpoints[i].distanceFromStart >= distance) {
+          before = sortedTrackpoints[i - 1];
+          after = sortedTrackpoints[i];
+          break;
+      }
+  }
+
+  const ratio = (distance - before.distanceFromStart) / (after.distanceFromStart - before.distanceFromStart);
+  const lat = before.lat + ratio * (after.lat - before.lat);
+  const lon = before.lon + ratio * (after.lon - before.lon);
+  const elevation = before.elevation + ratio * (after.elevation - before.elevation);
+
+  return {
+      lat: Number(lat.toFixed(6)), // Adjust the precision as needed
+      lon: Number(lon.toFixed(6)),
+      elevation: Number(elevation.toFixed(1))
+  };
+};
+
+
 // Additional utility functions can be added as needed
