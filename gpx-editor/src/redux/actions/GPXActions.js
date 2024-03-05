@@ -1,6 +1,7 @@
 // Actions for fetching an selecting races and stages
 import { fetchRaces, fetchRacesForSeasons } from '../../components/api';
 import { v4 as uuidv4 } from 'uuid';
+import { interpolateTrackpointData } from '../../Utilities'; // Adjust the path as necessary
 
 export const FETCH_RACES_SUCCESS = 'FETCH_RACES_SUCCESS';
 export const SET_SEASONS = 'SET_SEASONS'; // New action type for setting seasons
@@ -62,6 +63,41 @@ export const updateWaypoint = (waypoint) => ({
   type: UPDATE_WAYPOINT,
   payload: waypoint,
 });
+
+export const ADD_TRACKPOINT = 'ADD_TRACKPOINT';
+export const addWaypointAndTrackpoint = (waypoint) => {
+  return (dispatch, getState) => {
+      const { trackpoints } = getState();
+      const newWaypointID = uuidv4(); // Generate a unique ID for the new waypoint
+      const interpolatedData = trackpoints.length > 0 
+          ? interpolateTrackpointData(waypoint.distanceFromStart, trackpoints) 
+          : { lat: 0, lon: 0, elevation: 0 };
+
+      const newTrackpoint = {
+          id: uuidv4(), // Optionally assign a unique ID to the trackpoint as well
+          ...interpolatedData,
+          distanceFromStart: waypoint.distanceFromStart,
+          userCreated: true,
+          isWaypoint: true,
+          waypointID: newWaypointID,
+      };
+
+      // Dispatch action to add the new waypoint
+      dispatch({
+          type: ADD_WAYPOINT,
+          payload: { ...waypoint, id: newWaypointID },
+      });
+
+      // Dispatch action to add the new trackpoint
+      dispatch({
+          type: 'ADD_TRACKPOINT', // You'll need to define this action type and handler
+          payload: newTrackpoint,
+      });
+  };
+};
+
+
+
 
 export const ADD_SEGMENT = 'ADD_SEGMENT';
 export const addSegment = ({ name, startDistance, endDistance }) => {

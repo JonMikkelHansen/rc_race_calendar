@@ -1,7 +1,7 @@
 import { 
   FETCH_RACES_SUCCESS, SELECT_RACE, SELECT_STAGE,
   SET_MINY, SET_MAXY, SET_TOLERANCE, SET_TENSION, 
-  SET_TRACKPOINTS, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT, ADD_SEGMENT, EDIT_SEGMENT, DELETE_SEGMENT,
+  SET_TRACKPOINTS, ADD_TRACKPOINT, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT, ADD_SEGMENT, EDIT_SEGMENT, DELETE_SEGMENT,
   SET_SHOW_TRACKPOINTS, SET_SHOW_WAYPOINTS, SET_SHOW_ANNOTATIONS,
   SET_STAGE_TITLE // Import the new action type
 } from '../actions/GPXActions';
@@ -42,6 +42,10 @@ const GPXReducer = (state = initialState, action) => {
       return { ...state, tension: action.payload };
     case SET_TRACKPOINTS:
       return { ...state, trackpoints: action.payload };
+    case ADD_TRACKPOINT:
+      const newTrackpointsArray = [...state.trackpoints, action.payload];
+      newTrackpointsArray.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
+      return { ...state, trackpoints: newTrackpointsArray };
     case SET_WAYPOINTS:
       return { ...state, waypoints: action.payload };
     case ADD_WAYPOINT:

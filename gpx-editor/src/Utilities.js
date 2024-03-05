@@ -124,35 +124,47 @@ export function perpendicularDistance(point, line) {
 const interpolateTrackpointData = (distance, trackpoints) => {
   if (!trackpoints.length) return null; // Guard clause for empty trackpoints array
 
+  // Assuming that the trackpoints are already sorted by distanceFromStart
+  // If they are not, uncomment the following line to sort them
+  // trackpoints = trackpoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
+
   const maxDistance = trackpoints[trackpoints.length - 1].distanceFromStart;
   if (distance >= maxDistance) {
-      // Return the last trackpoint data directly if distance is at or beyond the last trackpoint
-      const { lat, lon, elevation } = trackpoints[trackpoints.length - 1];
-      return { lat, lon, elevation };
+    // Return the last trackpoint data directly if distance is at or beyond the last trackpoint
+    const { latitude, longitude, elevation } = trackpoints[trackpoints.length - 1];
+    return { lat: latitude, lon: longitude, elevation };
   }
 
-  const sortedTrackpoints = trackpoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
-  let before = sortedTrackpoints[0], after = sortedTrackpoints[1];
+  let before = trackpoints[0], after = trackpoints[1];
 
-  for (let i = 1; i < sortedTrackpoints.length; i++) {
-      if (sortedTrackpoints[i].distanceFromStart >= distance) {
-          before = sortedTrackpoints[i - 1];
-          after = sortedTrackpoints[i];
-          break;
-      }
+  for (let i = 1; i < trackpoints.length; i++) {
+    if (trackpoints[i].distanceFromStart >= distance) {
+      before = trackpoints[i - 1];
+      after = trackpoints[i];
+      break;
+    }
   }
+
+  console.log("Before trackpoint:", before);
+  console.log("After trackpoint:", after);
 
   const ratio = (distance - before.distanceFromStart) / (after.distanceFromStart - before.distanceFromStart);
-  const lat = before.lat + ratio * (after.lat - before.lat);
-  const lon = before.lon + ratio * (after.lon - before.lon);
+  const lat = before.latitude + ratio * (after.latitude - before.latitude);
+  const lon = before.longitude + ratio * (after.longitude - before.longitude);
   const elevation = before.elevation + ratio * (after.elevation - before.elevation);
 
+  // Log the calculated interpolation values
+  console.log("Interpolation ratio:", ratio);
+  console.log("Interpolated lat:", lat);
+  console.log("Interpolated lon:", lon);
+  console.log("Interpolated elevation:", elevation);
   return {
-      lat: Number(lat.toFixed(6)), // Adjust the precision as needed
-      lon: Number(lon.toFixed(6)),
-      elevation: Number(elevation.toFixed(1))
+    lat: Number(lat.toFixed(6)), // Adjust the precision as needed
+    lon: Number(lon.toFixed(6)),
+    elevation: Number(elevation.toFixed(1))
   };
 };
 
+export { interpolateTrackpointData };
 
 // Additional utility functions can be added as needed

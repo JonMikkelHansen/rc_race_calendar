@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateWaypoint, deleteWaypoint, addWaypoint } from '../redux/actions/GPXActions';
+import { interpolateTrackpointData } from '../Utilities'; // Adjust the path as necessary
+
 import styled from 'styled-components';
 
 
@@ -71,7 +74,7 @@ const WaypointItem = styled.li`
 `;
 
 // Adjusted buttons for compact styling
-const Button = styled.button`
+const CreateButton = styled.button`
   padding: 10px 20px;
   border: none;
   color: white;
@@ -84,7 +87,7 @@ const Button = styled.button`
   }
 `;
 
-const CancelButton = styled(Button)`
+const CancelButton = styled(CreateButton)`
   background-color: #dc3545;
   &:hover {
     background-color: #c82333;
@@ -134,6 +137,11 @@ export const WaypointEditor = () => {
     // Calculate maxDistance here to make it accessible throughout the component
     const maxDistance = trackpoints[trackpoints.length - 1]?.distanceFromStart || 0;
 
+    const logUserCreatedTrackpoints = () => {
+        const userCreatedTrackpoints = trackpoints.filter(tp => tp.userCreated);
+        console.log("User Created Trackpoints:", userCreatedTrackpoints);
+    };
+
     const findNearestTrackpointElevation = (distance) => {
         // First, determine the maximum allowed distance from the last trackpoint
         const maxDistance = trackpoints[trackpoints.length - 1]?.distanceFromStart || 0;
@@ -176,6 +184,10 @@ export const WaypointEditor = () => {
             setElevation(interpolatedElevation);
         }
     }, [distance, editWaypointId, trackpoints]); // Ensure trackpoints is included in the dependency array if it could change
+  
+    useEffect(() => {
+      logUserCreatedTrackpoints();
+  }, [trackpoints]); // Assuming trackpoints are a dependency
   
 
     const handleEditClick = (waypoint) => {
@@ -222,24 +234,45 @@ export const WaypointEditor = () => {
     };
 
     const handleAddClick = () => {
-        // Define the basic structure for a new waypoint
-        const waypointData = {
-          name: '',
-          description: '',
-          distanceFromStart: 0,
-          elevation: trackpoints[0]?.elevation || 0, // Default to the first trackpoint's elevation
+        // Use UUID to generate a unique ID for the new waypoint
+        const newWaypointId = uuidv4();
+    
+        // Assuming a distance of 0 for the new waypoint, interpolate the initial trackpoint data
+        const interpolatedData = trackpoints.length > 0 ? interpolateTrackpointData(0, trackpoints) : { lat: 0, lon: 0, elevation: 0 };
+    
+        console.log("Interpolated Trackpoint Data:", interpolatedData); // Debug log
+
+        // Prepare the new waypoint data with the interpolated trackpoint data
+        const newWaypoint = {
+            id: newWaypointId,
+            name: '', // Default to an empty name
+            description: '', // Default to an empty description
+            distanceFromStart: 0,
+            elevation: interpolatedData.elevation,
+            lat: interpolatedData.lat,
+            lon: interpolatedData.lon,
+            userCreated: true,
+            isWaypoint: true,
         };
-      
-        // Dispatch the action to add the waypoint and the corresponding trackpoint
-        dispatch(addWaypoint(waypointData));
-      
-        // Reset form and prepare for a new waypoint entry
-        resetForm();
+    
+        console.log("New Waypoint Object:", newWaypoint); // Debug log
+        // Dispatch the action to add the new waypoint to the Redux store
+        // Assuming you have an action creator that accepts this waypoint object
+        dispatch(addWaypoint(newWaypoint));
+        
+        // Reset form and prepare UI for entering details of the new waypoint
+        setEditWaypointId(newWaypointId); // Set editWaypointId to the new waypoint's ID to edit it immediately
+        setName('');
+        setDescription('');
+        setElevation(interpolatedData.elevation);
+        setDistance(0);
     };
+    
 
     return (
       <EditorContainer>
           <h3>Waypoints (Points of interest)</h3>
+          <CreateButton onClick={handleAddClick}>Create waypoint</CreateButton>
           <WaypointList>
               {waypoints.map((waypoint) => (
                   <WaypointItem key={waypoint.id} onClick={() => {
@@ -322,10 +355,10 @@ export const WaypointEditor = () => {
                     </WaypointItem>
                 ))}
             </WaypointList>
-            <Button onClick={() => setEditWaypointId('new')}>Create waypoint</Button>
         </EditorContainer>
     );
-    
 };
+
+
 
 export default WaypointEditor;
