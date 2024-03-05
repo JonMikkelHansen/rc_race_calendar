@@ -65,6 +65,7 @@ export const updateWaypoint = (waypoint) => ({
 });
 
 export const ADD_TRACKPOINT = 'ADD_TRACKPOINT';
+
 export const addWaypointAndTrackpoint = (waypoint) => {
   return (dispatch, getState) => {
       const { trackpoints } = getState();
@@ -90,9 +91,12 @@ export const addWaypointAndTrackpoint = (waypoint) => {
 
       // Dispatch action to add the new trackpoint
       dispatch({
-          type: 'ADD_TRACKPOINT', // You'll need to define this action type and handler
+          type: ADD_TRACKPOINT,
           payload: newTrackpoint,
       });
+
+      // Log to verify the dispatch
+      console.log("Dispatched new trackpoint:", newTrackpoint);
   };
 };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateWaypoint, deleteWaypoint, addWaypoint } from '../redux/actions/GPXActions';
+import { updateWaypoint, deleteWaypoint, addWaypoint, addWaypointAndTrackpoint } from '../redux/actions/GPXActions';
 import { interpolateTrackpointData } from '../Utilities'; // Adjust the path as necessary
 
 import styled from 'styled-components';
@@ -254,12 +254,13 @@ export const WaypointEditor = () => {
             userCreated: true,
             isWaypoint: true,
         };
-    
-        console.log("New Waypoint Object:", newWaypoint); // Debug log
         // Dispatch the action to add the new waypoint to the Redux store
         // Assuming you have an action creator that accepts this waypoint object
-        dispatch(addWaypoint(newWaypoint));
-        
+        dispatch(addWaypointAndTrackpoint(newWaypoint));
+
+        // Log to see if the action was dispatched
+        console.log("Dispatched new waypoint:", newWaypoint);
+
         // Reset form and prepare UI for entering details of the new waypoint
         setEditWaypointId(newWaypointId); // Set editWaypointId to the new waypoint's ID to edit it immediately
         setName('');

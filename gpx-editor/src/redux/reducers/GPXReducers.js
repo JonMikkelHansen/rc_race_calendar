@@ -43,9 +43,10 @@ const GPXReducer = (state = initialState, action) => {
     case SET_TRACKPOINTS:
       return { ...state, trackpoints: action.payload };
     case ADD_TRACKPOINT:
-      const newTrackpointsArray = [...state.trackpoints, action.payload];
-      newTrackpointsArray.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
-      return { ...state, trackpoints: newTrackpointsArray };
+      return {
+          ...state,
+          trackpoints: [...state.trackpoints, action.payload].sort((a, b) => a.distanceFromStart - b.distanceFromStart)
+      };
     case SET_WAYPOINTS:
       return { ...state, waypoints: action.payload };
     case ADD_WAYPOINT:
