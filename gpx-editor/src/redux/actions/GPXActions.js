@@ -95,8 +95,19 @@ export const addWaypointAndTrackpoint = (waypoint) => {
           payload: newTrackpoint,
       });
 
+      // Immediately after dispatch, log the new state of trackpoints
+      setTimeout(() => {
+        const updatedTrackpoints = getState().trackpoints; // Replace with actual state path if different
+        console.log("Updated Trackpoints Array:", updatedTrackpoints);
+        const isSorted = updatedTrackpoints.every((tp, index, arr) => index === 0 || arr[index - 1].distanceFromStart <= tp.distanceFromStart);
+        console.log("Is Trackpoints Array Sorted:", isSorted);
+      }, 0);
+
       // Log to verify the dispatch
       console.log("Dispatched new trackpoint:", newTrackpoint);
+           
+      // Log the updated state
+      console.log("State after dispatch:", getState());
   };
 };
 

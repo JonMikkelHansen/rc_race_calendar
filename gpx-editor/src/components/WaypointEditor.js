@@ -235,6 +235,7 @@ export const WaypointEditor = () => {
 
     const handleAddClick = () => {
         // Use UUID to generate a unique ID for the new waypoint
+        console.log("Trackpoints Array Before Interpolation:", trackpoints);
         const newWaypointId = uuidv4();
     
         // Assuming a distance of 0 for the new waypoint, interpolate the initial trackpoint data
