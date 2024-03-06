@@ -59,10 +59,38 @@ export const deleteWaypoint = (waypointId) => ({
 });
 
 export const UPDATE_WAYPOINT = 'UPDATE_WAYPOINT';
-export const updateWaypoint = (waypoint) => ({
-  type: UPDATE_WAYPOINT,
-  payload: waypoint,
-});
+export const updateWaypoint = (waypoint) => {
+  return (dispatch, getState) => {
+    const { trackpoints } = getState();
+
+    // Find the corresponding trackpoint by waypointID
+    const trackpointIndex = trackpoints.findIndex(tp => tp.waypointID === waypoint.id);
+    const trackpointToUpdate = trackpoints[trackpointIndex];
+
+    // If the trackpoint exists and is user-created, update it
+    if (trackpointToUpdate && trackpointToUpdate.userCreated) {
+      const updatedTrackpoint = {
+        ...trackpointToUpdate,
+        ...interpolateTrackpointData(waypoint.distanceFromStart, trackpoints),
+        distanceFromStart: waypoint.distanceFromStart,
+        elevation: waypoint.elevation,
+        // lat and lon will be updated by interpolateTrackpointData
+      };
+
+      // Dispatch action to update the trackpoint
+      dispatch({
+        type: 'UPDATE_TRACKPOINT', // You'll need to handle this action type in your reducer
+        payload: updatedTrackpoint,
+      });
+    }
+
+    // Dispatch action to update the waypoint
+    dispatch({
+      type: 'UPDATE_WAYPOINT', // Your existing action type for updating waypoints
+      payload: waypoint,
+    });
+  };
+};
 
 export const ADD_TRACKPOINT = 'ADD_TRACKPOINT';
 

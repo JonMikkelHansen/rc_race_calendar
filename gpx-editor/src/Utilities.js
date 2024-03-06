@@ -39,9 +39,12 @@ export function douglasPeucker(points, tolerance) {
 
   for (let i = 1; i < points.length - 1; i++) {
     const point = points[i];
+    // Ensure that userCreated points are not considered for removal
+    if (point.userCreated) continue;
+
     const distance = perpendicularDistance(point, { start: firstPoint, end: lastPoint });
 
-    if (distance > maxDistance && !point.isWaypoint) {
+    if (distance > maxDistance) {
       maxDistance = distance;
       index = i;
     }
@@ -52,14 +55,23 @@ export function douglasPeucker(points, tolerance) {
     const firstHalf = douglasPeucker(points.slice(0, index + 1), tolerance);
     const secondHalf = douglasPeucker(points.slice(index), tolerance);
 
-    // Concatenate the results and ensure that waypoints are included
-    return [...firstHalf.slice(0, -1), ...secondHalf];
+    // Concatenate the results and ensure that waypoints and userCreated points are included
+    const result = [...firstHalf.slice(0, -1), ...secondHalf];
+    // Reinsert userCreated points which may have been removed
+    const userCreatedPoints = points.filter(p => p.userCreated);
+    userCreatedPoints.forEach(point => {
+      if (!result.some(p => p.id === point.id)) {
+        result.push(point);
+      }
+    });
+    return result.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
   } else {
-    // Return the endpoints and any waypoints in between
-    const waypoints = points.filter(p => p.isWaypoint);
-    return [firstPoint, ...waypoints, lastPoint];
+    // Return the endpoints and any waypoints or userCreated points in between
+    const waypointsAndUserCreatedPoints = points.filter(p => p.isWaypoint || p.userCreated);
+    return [firstPoint, ...waypointsAndUserCreatedPoints, lastPoint];
   }
 }
+
 
 
 /**

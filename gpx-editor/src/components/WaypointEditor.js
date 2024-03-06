@@ -209,20 +209,18 @@ export const WaypointEditor = () => {
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
-        const waypointData = {
-            id: editWaypointId === 'new' ? undefined : editWaypointId,
-            name,
-            description,
-            elevation,
-            distanceFromStart: distance, // Keeping the unit consistent with the UI and data model
-        };
-        if (editWaypointId === 'new') {
-            dispatch(addWaypoint(waypointData));
-        } else {
-            dispatch(updateWaypoint(waypointData));
-        }
-        resetForm();
+      e.preventDefault();
+      const waypointData = {
+        id: editWaypointId, // No longer 'new', it should be the actual ID of the waypoint
+        name,
+        description,
+        elevation,
+        distanceFromStart: distance,
+      };
+    
+      // Dispatch the updated action creator
+      dispatch(updateWaypoint(waypointData));
+      resetForm();
     };
 
     const resetForm = () => {
