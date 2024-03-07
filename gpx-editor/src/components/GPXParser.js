@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { calculateHaversineDistance } from '../Utilities';
+import { calculateHaversineDistance, interpolateTrackpointData } from '../Utilities'; // Ensure interpolateTrackpointData is implemented correctly
 import { setMinY, setMaxY, setTrackpoints, setWaypoints, setStageTitle } from '../redux/actions/GPXActions';
 import store from '../redux/store';
 
@@ -10,10 +10,9 @@ const calculateAverageElevation = (prevElevation, nextElevation) => {
     return null;
 };
 
-const parseWaypoints = (xmlDoc) => {
+const parseWaypoints = (xmlDoc, allTrackpoints) => { // Added allTrackpoints as parameter for dependency
     const waypoints = [];
     const wptElements = xmlDoc.getElementsByTagName('wpt');
-
     for (let i = 0; i < wptElements.length; i++) {
         const wpt = wptElements[i];
         const lat = parseFloat(wpt.getAttribute('lat'));
@@ -21,19 +20,18 @@ const parseWaypoints = (xmlDoc) => {
         const name = wpt.getElementsByTagName('name')[0]?.textContent || 'Unnamed Waypoint';
         const desc = wpt.getElementsByTagName('desc')[0]?.textContent;
 
-        if (!isNaN(lat) && !isNaN(lon) && !name.startsWith("KM")) {
-            waypoints.push({
-                id: uuidv4(), // Use UUID to generate a unique ID for the waypoint
-                latitude: lat,
-                longitude: lon,
-                name: name,
-                description: desc,
-                elevation: undefined, // To be updated
-                distanceFromStart: undefined // To be updated
-            });
-        }
-    }
+        // Additional attributes like 'distanceFromStart' and 'elevation' are parsed here if provided
 
+        waypoints.push({
+            id: uuidv4(),
+            latitude: lat,
+            longitude: lon,
+            name,
+            description: desc,
+            elevation: undefined, // To be interpolated or updated
+            distanceFromStart: undefined // To be calculated or updated
+        });
+    }
     return waypoints;
 };
 
@@ -119,26 +117,60 @@ const assignDistanceToWaypoints = (waypoints, trackpoints) => {
     });
 };
 
-export const parseStandardGPX = (xmlDoc) => {
-    const waypoints = parseWaypoints(xmlDoc);
-    const { tracks, allTrackpoints, minY, maxY } = parseTracks(xmlDoc);
-    assignDistanceToWaypoints(waypoints, allTrackpoints);
-
-    // Extract the stage title from the first track's name element
-    const trkElements = xmlDoc.getElementsByTagName('trk');
-    let stageTitle = 'Unknown'; // Default to 'Unknown'
-    if (trkElements.length > 0) {
-        const firstTrkNameElement = trkElements[0].getElementsByTagName('name')[0]?.textContent;
-        if (firstTrkNameElement) {
-            stageTitle = firstTrkNameElement;
+const ensureWaypointTrackpointPairs = (waypoints, allTrackpoints) => {
+    waypoints.forEach(waypoint => {
+        // Find an existing trackpoint with the same distanceFromStart.
+        const trackpointIndex = allTrackpoints.findIndex(tp => tp.distanceFromStart === waypoint.distanceFromStart);
+        
+        if (trackpointIndex !== -1) {
+            // If found, update the existing trackpoint with waypoint's data.
+            allTrackpoints[trackpointIndex] = {
+                ...allTrackpoints[trackpointIndex],
+                latitude: waypoint.latitude,
+                longitude: waypoint.longitude,
+                elevation: waypoint.elevation,
+                isWaypoint: true,
+                waypointID: waypoint.id,
+            };
+        } else {
+            // If not found, create and add a new trackpoint for this waypoint.
+            allTrackpoints.push({
+                id: uuidv4(),
+                latitude: waypoint.latitude,
+                longitude: waypoint.longitude,
+                elevation: waypoint.elevation,
+                distanceFromStart: waypoint.distanceFromStart,
+                isWaypoint: true,
+                waypointID: waypoint.id,
+            });
         }
+    });
+
+    // Sort the allTrackpoints array by distanceFromStart after modification.
+    allTrackpoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
+};
+
+
+export const parseStandardGPX = (xmlDoc) => {
+    const { allTrackpoints, minY, maxY } = parseTracks(xmlDoc);
+    const waypoints = parseWaypoints(xmlDoc, allTrackpoints);
+
+    assignDistanceToWaypoints(waypoints, allTrackpoints);
+    ensureWaypointTrackpointPairs(waypoints, allTrackpoints);
+
+    const trkElements = xmlDoc.getElementsByTagName('trk');
+    let stageTitle = 'Unknown';
+    if (trkElements.length > 0 && trkElements[0].getElementsByTagName('name')[0]) {
+        stageTitle = trkElements[0].getElementsByTagName('name')[0].textContent;
     }
 
-    // Set the stageTitle in Redux
     store.dispatch(setStageTitle(stageTitle));
-    
+    store.dispatch(setMinY(Math.floor(minY / 100) * 100));
+    store.dispatch(setMaxY(Math.ceil(maxY / 100) * 100));
+    store.dispatch(setTrackpoints(allTrackpoints));
     store.dispatch(setWaypoints(waypoints));
-    return { waypoints, tracks, allTrackpoints, minY, maxY };
+
+    return { waypoints, allTrackpoints, minY, maxY };
 };
 
 export const parseCustomGPX = (xmlDoc) => {
