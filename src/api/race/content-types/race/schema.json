@@ -253,6 +253,12 @@
         "Zambia",
         "Zimbabwe"
       ]
+    },
+    "Winner": {
+      "type": "string"
+    },
+    "Winning_team": {
+      "type": "string"
     }
   }
 }

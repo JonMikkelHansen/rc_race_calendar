@@ -938,6 +938,8 @@ export interface ApiRaceRace extends Schema.CollectionType {
         'Zimbabwe'
       ]
     >;
+    Winner: Attribute.String;
+    Winning_team: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1030,7 +1032,6 @@ export interface ApiStageStage extends Schema.CollectionType {
     rc_stage_description_vo_sound: Attribute.Media;
     rc_stage_preview_video: Attribute.Media;
     gpx_file_ext_link: Attribute.String;
-    gpx_file: Attribute.Media;
     image_prompt_01: Attribute.RichText;
     image_prompt_02: Attribute.RichText;
     image_prompt_03: Attribute.RichText;
@@ -1038,6 +1039,8 @@ export interface ApiStageStage extends Schema.CollectionType {
     generated_videos: Attribute.Media;
     external_link: Attribute.String;
     gpx: Attribute.Relation<'api::stage.stage', 'oneToOne', 'api::gpx.gpx'>;
+    Winner: Attribute.String;
+    Winning_team: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

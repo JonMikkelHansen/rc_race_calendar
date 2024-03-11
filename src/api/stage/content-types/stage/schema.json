@@ -114,14 +114,6 @@
     "gpx_file_ext_link": {
       "type": "string"
     },
-    "gpx_file": {
-      "type": "media",
-      "multiple": true,
-      "required": false,
-      "allowedTypes": [
-        "files"
-      ]
-    },
     "image_prompt_01": {
       "type": "richtext"
     },
@@ -161,6 +153,12 @@
       "relation": "oneToOne",
       "target": "api::gpx.gpx",
       "mappedBy": "stage"
+    },
+    "Winner": {
+      "type": "string"
+    },
+    "Winning_team": {
+      "type": "string"
     }
   }
 }
