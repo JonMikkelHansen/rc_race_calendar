@@ -259,6 +259,9 @@
     },
     "Winning_team": {
       "type": "string"
+    },
+    "PCS_id": {
+      "type": "biginteger"
     }
   }
 }

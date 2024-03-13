@@ -940,6 +940,7 @@ export interface ApiRaceRace extends Schema.CollectionType {
     >;
     Winner: Attribute.String;
     Winning_team: Attribute.String;
+    PCS_id: Attribute.BigInteger;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
