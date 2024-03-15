@@ -15,7 +15,7 @@ const HeaderContainer = styled.div`
 
 // Styled logo component or img
 const StyledLogo = styled(RCLogo)`
-  width: 20em; // Setting the width of the logo
+  width: 10em; // Setting the width of the logo
   margin: 0.5em; // Adding margin around the logo
 `;
 

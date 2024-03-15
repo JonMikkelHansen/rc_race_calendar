@@ -8,7 +8,7 @@ import styled from 'styled-components';
 
 
 const EditorContainer = styled.div`
-  width: 33.3%;
+  width: 90%;
   padding: 20px;
   background-color: #f0f0f0;
   border-radius: 8px;
@@ -234,7 +234,6 @@ export const WaypointEditor = () => {
     const handleAddClick = () => {
         // Use UUID to generate a unique ID for the new waypoint
         console.log("Trackpoints Array Before Interpolation:", trackpoints);
-        const newWaypointId = uuidv4();
     
         // Assuming a distance of 0 for the new waypoint, interpolate the initial trackpoint data
         const interpolatedData = trackpoints.length > 0 ? interpolateTrackpointData(0, trackpoints) : { lat: 0, lon: 0, elevation: 0 };
@@ -243,15 +242,13 @@ export const WaypointEditor = () => {
 
         // Prepare the new waypoint data with the interpolated trackpoint data
         const newWaypoint = {
-            id: newWaypointId,
             name: '', // Default to an empty name
-            description: '', // Default to an empty description
-            distanceFromStart: 0,
+            description: '', // Default to an empty description            
+            latitude: interpolatedData.lat,
+            longitude: interpolatedData.lon,
             elevation: interpolatedData.elevation,
-            lat: interpolatedData.lat,
-            lon: interpolatedData.lon,
+            distanceFromStart: 0,
             userCreated: true,
-            isWaypoint: true,
         };
         // Dispatch the action to add the new waypoint to the Redux store
         // Assuming you have an action creator that accepts this waypoint object
@@ -261,7 +258,6 @@ export const WaypointEditor = () => {
         console.log("Dispatched new waypoint:", newWaypoint);
 
         // Reset form and prepare UI for entering details of the new waypoint
-        setEditWaypointId(newWaypointId); // Set editWaypointId to the new waypoint's ID to edit it immediately
         setName('');
         setDescription('');
         setElevation(interpolatedData.elevation);

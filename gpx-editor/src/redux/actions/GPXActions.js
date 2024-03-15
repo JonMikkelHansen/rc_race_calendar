@@ -62,85 +62,75 @@ export const UPDATE_WAYPOINT = 'UPDATE_WAYPOINT';
 export const updateWaypoint = (waypoint) => {
   return (dispatch, getState) => {
     const { trackpoints } = getState();
-
-    // Find the corresponding trackpoint by waypointID
-    const trackpointIndex = trackpoints.findIndex(tp => tp.waypointID === waypoint.id);
-    const trackpointToUpdate = trackpoints[trackpointIndex];
-
-    // If the trackpoint exists and is user-created, update it
-    if (trackpointToUpdate && trackpointToUpdate.userCreated) {
-      const updatedTrackpoint = {
-        ...trackpointToUpdate,
-        ...interpolateTrackpointData(waypoint.distanceFromStart, trackpoints),
-        distanceFromStart: waypoint.distanceFromStart,
-        elevation: waypoint.elevation,
-        // lat and lon will be updated by interpolateTrackpointData
-      };
-
-      // Dispatch action to update the trackpoint
-      dispatch({
-        type: 'UPDATE_TRACKPOINT', // You'll need to handle this action type in your reducer
-        payload: updatedTrackpoint,
-      });
-    }
-
-    // Dispatch action to update the waypoint
+    const interpolatedData = interpolateTrackpointData(waypoint.distanceFromStart, trackpoints);
+    
+    // Update the waypoint with interpolated data
+    const updatedWaypoint = {
+      ...waypoint,
+      lat: interpolatedData.lat,
+      lon: interpolatedData.lon,
+      elevation: interpolatedData.elevation,
+    };
+    
     dispatch({
-      type: 'UPDATE_WAYPOINT', // Your existing action type for updating waypoints
-      payload: waypoint,
+      type: UPDATE_WAYPOINT,
+      payload: updatedWaypoint,
     });
+    
+    // Find and update the corresponding trackpoint
+    const trackpointIndex = trackpoints.findIndex(tp => tp.waypointID === waypoint.id);
+    if (trackpointIndex !== -1) {
+      const updatedTrackpoint = {
+        ...trackpoints[trackpointIndex],
+        latitude: interpolatedData.lat,
+        longitude: interpolatedData.lon,
+        elevation: interpolatedData.elevation,
+        distanceFromStart: waypoint.distanceFromStart,
+      };
+      
+      // Update the trackpoint in the Redux store
+      const newTrackpoints = [...trackpoints];
+      newTrackpoints[trackpointIndex] = updatedTrackpoint;
+      dispatch(setTrackpoints(newTrackpoints));
+    }
   };
 };
+
 
 export const ADD_TRACKPOINT = 'ADD_TRACKPOINT';
 
-export const addWaypointAndTrackpoint = (waypoint) => {
+
+export const addWaypointAndTrackpoint = (waypointData) => {
   return (dispatch, getState) => {
-      const { trackpoints } = getState();
-      const newWaypointID = uuidv4(); // Generate a unique ID for the new waypoint
-      const interpolatedData = trackpoints.length > 0 
-          ? interpolateTrackpointData(waypoint.distanceFromStart, trackpoints) 
-          : { lat: 0, lon: 0, elevation: 0 };
-
-      const newTrackpoint = {
-          id: uuidv4(), // Optionally assign a unique ID to the trackpoint as well
-          ...interpolatedData,
-          distanceFromStart: waypoint.distanceFromStart,
-          userCreated: true,
-          isWaypoint: true,
-          waypointID: newWaypointID,
-      };
-
-      // Dispatch action to add the new waypoint
-      dispatch({
-          type: ADD_WAYPOINT,
-          payload: { ...waypoint, id: newWaypointID },
-      });
-
-      // Dispatch action to add the new trackpoint
-      dispatch({
-          type: ADD_TRACKPOINT,
-          payload: newTrackpoint,
-      });
-
-      // Immediately after dispatch, log the new state of trackpoints
-      setTimeout(() => {
-        const updatedTrackpoints = getState().trackpoints; // Replace with actual state path if different
-        console.log("Updated Trackpoints Array:", updatedTrackpoints);
-        const isSorted = updatedTrackpoints.every((tp, index, arr) => index === 0 || arr[index - 1].distanceFromStart <= tp.distanceFromStart);
-        console.log("Is Trackpoints Array Sorted:", isSorted);
-      }, 0);
-
-      // Log to verify the dispatch
-      console.log("Dispatched new trackpoint:", newTrackpoint);
-           
-      // Log the updated state
-      console.log("State after dispatch:", getState());
+    const { trackpoints } = getState();
+    const newWaypointID = uuidv4(); // Generate a unique ID for the new waypoint
+    const firstTrackpoint = trackpoints[0] || { lat: 0, lon: 0, elevation: 0 };
+    
+    // Create a new waypoint at the position of the first trackpoint
+    const newWaypoint = {
+      ...waypointData,
+      id: newWaypointID, // Use the same ID for waypoint
+    };
+    
+    dispatch({
+      type: ADD_WAYPOINT,
+      payload: newWaypoint,
+    });
+    
+    // Optionally, add a corresponding trackpoint if it doesn't exist
+    const newTrackpoint = {
+      ...waypointData,
+      id: uuidv4(), // Assign a new ID to ensure uniqueness
+      waypointID: newWaypointID, // Link to the new waypoint
+      isWaypoint: true,
+    };
+    
+    dispatch({
+      type: ADD_TRACKPOINT,
+      payload: newTrackpoint,
+    });
   };
 };
-
-
-
 
 export const ADD_SEGMENT = 'ADD_SEGMENT';
 export const addSegment = ({ name, startDistance, endDistance }) => {
