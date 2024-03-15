@@ -14,7 +14,7 @@ const SliderContainer = styled.div`
 
 const ComponentView = styled.div`
     width: 100%; /* Full width of the slider container */
-    padding-top: 75%; /* 4:3 Aspect Ratio: (3 / 4) * 100% */
+    padding-top: 5%; 
     position: relative; /* Child absolute positioning context */
 `;
 
@@ -71,12 +71,15 @@ const GPXViz = () => {
                 <button onClick={handleSaveClick}>Save</button>
             )}
             <SliderContainer>
-                <button onClick={() => setActiveComponent('profile')}>GPX Profile</button>
-                <button onClick={() => setActiveComponent('map')}>GPX Map</button>
+                <button onClick={() => setActiveComponent('profile')}>Stage Profile</button>
+                <button onClick={() => setActiveComponent('map')}>Stage Map</button>
                 <ComponentView>
-                    <ActiveComponent>
-                        {activeComponent === 'profile' ? <GPXProfile /> : <GPXMap />}
-                    </ActiveComponent>
+                    <div style={{ display: activeComponent === 'profile' ? 'block' : 'none' }}>
+                        <GPXProfile />
+                    </div>
+                    <div style={{ display: activeComponent === 'map' ? 'block' : 'none' }}>
+                        <GPXMap />
+                    </div>
                 </ComponentView>
             </SliderContainer>
             {/* Inputs and labels for showing/hiding trackpoints, waypoints, annotations, and adjusting settings */}

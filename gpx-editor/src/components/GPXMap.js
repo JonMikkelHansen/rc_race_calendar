@@ -8,18 +8,21 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoiam9uaGFuc2VuIiwiYSI6ImNrdXF0cTBsazA2emkyb3A1Y
 
 const GPXMap = () => {
     const mapContainerRef = useRef(null);
-    // Assuming trackpoints are stored in a similar structure as used in GPXProfile.js
-    const trackpoints = useSelector((state) => state.trackpoints);
+    const trackpoints = useSelector((state) => state.trackpoints); // Ensure this selector is correct
 
     useEffect(() => {
         const map = new mapboxgl.Map({
             container: mapContainerRef.current,
-            style: 'mapbox://styles/mapbox/streets-v11', // Choose the style you prefer
-            center: [0, 0], // This will be adjusted to fit the track
-            zoom: 2,
+            style: 'mapbox://styles/mapbox/streets-v11', // Preferable map style
+            center: [0, 0], // Initial center, will be adjusted later
+            zoom: 2, // Initial zoom
         });
 
+        const resizeMap = () => map.resize(); // Function to resize the map
+
         map.on('load', () => {
+            resizeMap(); // Trigger resize after the map is loaded to ensure tiles load correctly
+
             if (trackpoints.length > 0) {
                 const geojsonData = {
                     type: "FeatureCollection",
@@ -29,15 +32,11 @@ const GPXMap = () => {
                             type: "LineString",
                             coordinates: trackpoints.map(tp => [tp.longitude, tp.latitude]),
                         },
-                        properties: {},
                     }],
                 };
 
-                map.addSource('track', {
-                    type: 'geojson',
-                    data: geojsonData,
-                });
-
+                // Adding the source and the layer for the track
+                map.addSource('track', { type: 'geojson', data: geojsonData });
                 map.addLayer({
                     id: 'track',
                     type: 'line',
@@ -52,19 +51,28 @@ const GPXMap = () => {
                     },
                 });
 
-                // Fit map to track bounds
+                // Calculate bounds from the trackpoints and fit the map to these bounds
                 const bounds = new mapboxgl.LngLatBounds();
-                geojsonData.features[0].geometry.coordinates.forEach(coord => bounds.extend(coord));
-                map.fitBounds(bounds, {
-                    padding: 20,
-                });
+                trackpoints.forEach(tp => bounds.extend(new mapboxgl.LngLat(tp.longitude, tp.latitude)));
+                map.fitBounds(bounds, { padding: 20 }); // Adjust the view to the track
             }
         });
 
-        return () => map.remove(); // Cleanup on unmount
-    }, [trackpoints]); // Dependency array includes trackpoints to update map when they change
+        // Set up ResizeObserver to ensure the map resizes with the container
+        const resizeObserver = new ResizeObserver(() => resizeMap());
+        resizeObserver.observe(mapContainerRef.current);
 
-    return <div ref={mapContainerRef} style={{ width: '100%', height: '400px' }} />;
+        // Clean up on unmount
+        return () => {
+            if (map) {
+                map.remove();
+            }
+            resizeObserver.unobserve(mapContainerRef.current);
+        };
+    }, [trackpoints]); // Dependency array for re-running the effect when trackpoints change
+
+    // The aspect ratio for 16:9 would be 56.25% (9 / 16 = 0.5625)
+    return <div ref={mapContainerRef} style={{ width: '100%', height: '0', paddingBottom: '56.25%', position: 'relative' }} />;
 };
 
 export default GPXMap;
