@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import GPXProfile from './GPXProfile'; // Ensure the path is correct based
 import GPXMap from './GPXMap'; // Ensure the path is correct based
 import { useSelector, useDispatch } from 'react-redux';
-import { setStageTitle } from '../redux/actions/GPXActions';
+import { setStageTitle } from '../../redux/actions/GPXActions';
 import styled from 'styled-components';
 
 

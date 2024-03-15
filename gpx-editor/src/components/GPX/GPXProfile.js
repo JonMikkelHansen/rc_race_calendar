@@ -1,8 +1,8 @@
 // GPXProfile.js
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { douglasPeucker } from '../Utilities'; // Adjust the path as necessary
-import { setMinY, setMaxY, setTolerance, setTension, setShowTrackpoints, setShowWaypoints, setShowAnnotations  } from '../redux/actions/GPXActions'; // Adjust the path as necessary
+import { douglasPeucker } from '../../Utilities'; // Adjust the path as necessary
+import { setMinY, setMaxY, setTolerance, setTension, setShowTrackpoints, setShowWaypoints, setShowAnnotations  } from '../../redux/actions/GPXActions'; // Adjust the path as necessary
 import { Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';

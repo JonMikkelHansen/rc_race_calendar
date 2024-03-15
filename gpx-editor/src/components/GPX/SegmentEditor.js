@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addSegment, editSegment, deleteSegment } from '../redux/actions/GPXActions';
+import { addSegment, editSegment, deleteSegment } from '../../redux/actions/GPXActions';
 
 export const SegmentEditor = () => {
     const trackpoints = useSelector(state => state.trackpoints);

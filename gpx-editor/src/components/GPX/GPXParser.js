@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { calculateHaversineDistance, interpolateTrackpointData } from '../Utilities'; // Ensure interpolateTrackpointData is implemented correctly
-import { setMinY, setMaxY, setTrackpoints, setWaypoints, setStageTitle } from '../redux/actions/GPXActions';
-import store from '../redux/store';
+import { calculateHaversineDistance, interpolateTrackpointData } from '../../Utilities'; // Ensure interpolateTrackpointData is implemented correctly
+import { setMinY, setMaxY, setTrackpoints, setWaypoints, setStageTitle } from '../../redux/actions/GPXActions';
+import store from '../../redux/store';
 
 const calculateAverageElevation = (prevElevation, nextElevation) => {
     if (prevElevation != null && nextElevation != null) {

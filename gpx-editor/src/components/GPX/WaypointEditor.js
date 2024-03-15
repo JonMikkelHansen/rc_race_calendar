@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateWaypoint, deleteWaypoint, addWaypoint, addWaypointAndTrackpoint } from '../redux/actions/GPXActions';
-import { interpolateTrackpointData } from '../Utilities'; // Adjust the path as necessary
+import { updateWaypoint, deleteWaypoint, addWaypoint, addWaypointAndTrackpoint } from '../../redux/actions/GPXActions';
+import { interpolateTrackpointData } from '../../Utilities'; // Adjust the path as necessary
 
 import styled from 'styled-components';
 
