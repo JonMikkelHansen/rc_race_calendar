@@ -30,8 +30,6 @@ function App() {
           {gpxData && (
             <>
               <GPXViz gpxData={gpxData} />
-              <WaypointEditor gpxData={gpxData} onEdit={handleGPXData} />
-              <SegmentEditor gpxData={gpxData} onEdit={handleGPXData} />
               <GPXSave />
             </>
           )}

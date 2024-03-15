@@ -21,7 +21,7 @@ const StyledLogo = styled(RCLogo)`
 
 const StyledHeading = styled.h1`
   font-family: 'Libre Franklin', sans-serif; // Setting the font family
-  font-size: 2em; // Setting the font size
+  font-size: 1em; // Setting the font size
   color: #fff; // Setting the text color
   margin: 0 1em; // Optionally, remove default margin
 `;
