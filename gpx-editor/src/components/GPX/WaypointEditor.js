@@ -16,18 +16,28 @@ const EditorContainer = styled.div`
 `;
 
 const EditForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  background-color: #f0f0f0;
+  display: block; /* Changed from flex to block */
   padding: 10px;
   border-radius: 5px;
-  margin-top: 5px;
+  transition: max-height 0.3s ease-out;
+  overflow: hidden;
+  background-color: transparent; /* Removed background color */
+  position: relative; /* Positioned relative to place the delete button absolutely */
+  padding-top: 40px; /* Give space for the delete button at the top */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Optional: add shadow for depth */
 `;
+
+const WaypointInfo = styled.div`
+  justifyContent: space-between; 
+  alignItems: center;
+  width: 100%;
+  display: ${props => props.isActive ? 'none' : 'flex'}; // Use props to toggle height
+`;  
 
 const StyledForm = styled.form`
   display: flex;
   flex-direction: column;
-  background-color: #f0f0f0;
+  background: none;
   padding: 10px;
   border-radius: 5px;
   margin-top: 5px;
@@ -109,7 +119,7 @@ const DeleteButton = styled.button`
   }
 `;
 
-const VibrantButton = styled.button`
+const SaveButton = styled.button`
   background-color: #00ff6a; // Example vibrant color
   color: #000; // Dark text for contrast
   font-family: 'Libre Franklin', sans-serif;
@@ -300,25 +310,21 @@ export const WaypointEditor = () => {
           <h3>Waypoints (Points of interest)</h3>
           <CreateButton onClick={handleAddClick}>Create waypoint</CreateButton>
           <WaypointList>
-              {waypoints.map((waypoint) => (
-                  <WaypointItem key={waypoint.id} onClick={() => {
-                      // Only set editWaypointId if it is not already set to this waypoint's ID
-                      if (editWaypointId !== waypoint.id) {
-                          setEditWaypointId(waypoint.id);
-                          setName(waypoint.name);
-                          setDescription(waypoint.description || '');
-                          setElevation(waypoint.elevation || 0);
-                          setDistance(waypoint.distanceFromStart);
-                      }
-                  }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                          <span>{`${waypoint.distanceFromStart.toFixed(2)} km, ${waypoint.name}, ${waypoint.elevation} m`}</span>
-                          <DeleteButton onClick={(e) => {
-                              e.stopPropagation(); // Prevents the delete click from triggering the item's onClick
-                              handleDeleteClick(waypoint.id);
-                          }}>Delete</DeleteButton>
-                      </div>
-                      {editWaypointId === waypoint.id && (
+            {waypoints.map((waypoint) => (
+              <WaypointItem
+                key={waypoint.id}
+                onClick={() => {
+                  // Set the edit state for the clicked waypoint, unless it's already being edited
+                  if (editWaypointId !== waypoint.id) {
+                    setEditWaypointId(waypoint.id);
+                    setName(waypoint.name);
+                    setDescription(waypoint.description || '');
+                    setElevation(waypoint.elevation || 0);
+                    setDistance(waypoint.distanceFromStart);
+                  }
+                }}
+              >
+                {editWaypointId === waypoint.id ? (
                           <StyledForm
                             isActive={true} // Always true because we're not toggling it closed anymore
                             onSubmit={handleSubmit}
@@ -375,14 +381,27 @@ export const WaypointEditor = () => {
                                 />
 
 
-                                <VibrantButton primary type="submit">Save Changes</VibrantButton>
+                                <SaveButton primary type="submit">Save Changes</SaveButton>
                                 <CancelButton type="button" onClick={(e) => {
                                     e.stopPropagation(); // Prevent click from bubbling up to the WaypointItem's onClick
                                     setEditWaypointId(null); // Collapse the form without saving changes
                                 }}>Cancel</CancelButton>
                             </StyledForm>
+                        ) : (
+                          // Display waypoint information when it's not in edit mode
+                          <div>
+                            <span>{`${waypoint.distanceFromStart.toFixed(2)} km, ${waypoint.name}, ${waypoint.elevation} m`}</span>
+                          </div>
                         )}
-                    </WaypointItem>
+                        <DeleteButton
+                          onClick={(e) => {
+                            e.stopPropagation(); // Stop click from bubbling up to the WaypointItem's onClick
+                            handleDeleteClick(waypoint.id);
+                          }}
+                        >
+                          Delete
+                        </DeleteButton>
+                      </WaypointItem>
                 ))}
             </WaypointList>
         </EditorContainer>
