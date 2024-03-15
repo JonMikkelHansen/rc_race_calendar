@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import Header from './components/common/Header';
-import Tabs from './components/common/Tabs'; // Note: We'll modify Tabs.js to include the tabs functionality
+import Tabs from './components/common/Tabs';
 import RaceList from './components/RaceList';
 import GPXUploader from './components/GPX/GPXUploader';
 import GPXViz from './components/GPX/GPXViz';
@@ -11,7 +11,7 @@ import GPXSave from './components/GPXSave';
 
 function App() {
   const [gpxData, setGpxData] = useState(null);
-  const [activeTab, setActiveTab] = useState('GPX'); // Added state to manage active tab
+  const [activeTab, setActiveTab] = useState('GPX'); // 'GPX' tab is active by default
 
   const handleGPXData = (data) => {
     setGpxData(data);
@@ -22,20 +22,20 @@ function App() {
       <div className="App">
         <Header />
         <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
-        {activeTab === 'Race' && <RaceList />}
-        {activeTab === 'GPX' && (
-          <>
-            <GPXUploader onGPXData={handleGPXData} />
-            {gpxData && (
-              <>
-                <GPXViz gpxData={gpxData} />
-                <WaypointEditor gpxData={gpxData} onEdit={handleGPXData} />
-                <SegmentEditor gpxData={gpxData} onEdit={handleGPXData} />
-                <GPXSave /> {/* GPX Save component */}
-              </>
-            )}
-          </>
-        )}
+        <div style={{ display: activeTab === 'Race' ? 'block' : 'none' }}>
+          <RaceList />
+        </div>
+        <div style={{ display: activeTab === 'GPX' ? 'block' : 'none' }}>
+          <GPXUploader onGPXData={handleGPXData} />
+          {gpxData && (
+            <>
+              <GPXViz gpxData={gpxData} />
+              <WaypointEditor gpxData={gpxData} onEdit={handleGPXData} />
+              <SegmentEditor gpxData={gpxData} onEdit={handleGPXData} />
+              <GPXSave />
+            </>
+          )}
+        </div>
       </div>
     </Router>
   );
