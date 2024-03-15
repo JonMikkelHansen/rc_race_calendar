@@ -125,7 +125,21 @@ const VibrantButton = styled.button`
 `;
 
 export const WaypointEditor = () => {
-    const waypoints = useSelector(state => state.waypoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart));
+    const waypoints = useSelector(state => state.waypoints.sort((a, b) => {
+      // Check if both waypoints have a createdAt timestamp
+      if (a.createdAt && b.createdAt) {
+        // Both waypoints have a timestamp, so sort by timestamp descending (newest first)
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (a.createdAt) {
+        // Only waypoint a has a timestamp, so it should come before b
+        return -1;
+      } else if (b.createdAt) {
+        // Only waypoint b has a timestamp, so a should come before b
+        return 1;
+      }
+      // Neither waypoint has a timestamp, or other sorting logic if needed
+      return a.distanceFromStart - b.distanceFromStart;
+    }));
     // Correctly fetch trackpoints from the Redux store
     const trackpoints = useSelector((state: { trackpoints: any }) => state.trackpoints); // Assuming trackpoints are stored in the Redux state under 'trackpoints'
     const dispatch = useDispatch();
@@ -135,6 +149,8 @@ export const WaypointEditor = () => {
     const [elevation, setElevation] = useState(0);
     const [distance, setDistance] = useState(0); // Distance should remain in the unit it is used in the UI
     // Calculate maxDistance here to make it accessible throughout the component
+    // Add this new state to keep track of the input value independently
+    const [inputDistance, setInputDistance] = useState(0);
     const maxDistance = trackpoints[trackpoints.length - 1]?.distanceFromStart || 0;
 
     const logUserCreatedTrackpoints = () => {
@@ -214,7 +230,7 @@ export const WaypointEditor = () => {
         id: editWaypointId, // No longer 'new', it should be the actual ID of the waypoint
         name,
         description,
-        elevation,
+        elevation: elevation,
         distanceFromStart: distance,
       };
     
@@ -248,6 +264,7 @@ export const WaypointEditor = () => {
             longitude: interpolatedData.lon,
             elevation: interpolatedData.elevation,
             distanceFromStart: 0,
+            createdAt: new Date().toISOString(), // Add a timestamp
             userCreated: true,
         };
         // Dispatch the action to add the new waypoint to the Redux store
@@ -263,7 +280,20 @@ export const WaypointEditor = () => {
         setElevation(interpolatedData.elevation);
         setDistance(0);
     };
-    
+
+    // Add this handler function
+    const handleDistanceChange = (e) => {
+      const newDistance = parseFloat(e.target.value);
+      if (!isNaN(newDistance) && newDistance >= 0 && newDistance <= maxDistance) {
+        setDistance(newDistance); // Update the distance state
+        setInputDistance(newDistance); // Update the input distance state
+        // Call interpolateTrackpointData to get the interpolated elevation
+        const interpolatedData = interpolateTrackpointData(newDistance, trackpoints);
+        if (interpolatedData) {
+          setElevation(interpolatedData.elevation); // Update the elevation state with the interpolated value
+        }
+      }
+    };
 
     return (
       <EditorContainer>
@@ -310,36 +340,40 @@ export const WaypointEditor = () => {
                                     placeholder="Description" 
                                 />
                                 <FormInput 
-                                    type="number" 
-                                    defaultValue={waypoint.elevation} 
-                                    onChange={(e) => setElevation(parseFloat(e.target.value))} 
-                                    placeholder="Elevation (m)" 
+                                  type="number" 
+                                  value={elevation.toString()} 
+                                  onChange={(e) => {
+                                    const newElevation = parseFloat(e.target.value);
+                                    if (!isNaN(newElevation)) {
+                                      setElevation(newElevation); // Update elevation only if the input is a number
+                                    }
+                                  }} 
+                                  placeholder="Elevation (m)" 
                                 />
+
                                 <FormInput 
-                                    type="number" 
-                                    value={distance.toString()} 
-                                    onChange={(e) => {
-                                        const newDistance = parseFloat(e.target.value);
-
-                                        if (!isNaN(newDistance)) {
-                                            if (newDistance <= maxDistance) {
-                                                setDistance(newDistance);
-                                                const interpolatedElevation = findNearestTrackpointElevation(newDistance);
-                                                setElevation(interpolatedElevation);
-                                            } else {
-                                                // Option 1: Reset to max distance (uncomment the line below to use this option)
-                                                setDistance(maxDistance);
-
-                                                // Option 2: Display a warning message to the user (not shown here, implementation depends on your UI framework)
-
-                                                // Prevent the update by not setting the state, effectively ignoring the input
-                                                // Optionally, provide feedback to the user here
-                                                alert("Distance cannot be greater than the last trackpoint.");
-                                            }
-                                        }
-                                    }}
-                                    placeholder="Distance from Start (km)" 
+                                  type="number" 
+                                  value={inputDistance.toString()} // Use inputDistance for value
+                                  onChange={(e) => {
+                                    const newDistance = parseFloat(e.target.value);
+                                    setInputDistance(newDistance); // Update the inputDistance state as the user types
+                                    if (!isNaN(newDistance)) {
+                                      if (newDistance <= maxDistance) {
+                                        setDistance(newDistance); // Update distance only if within the allowed range
+                                        const interpolatedData = interpolateTrackpointData(newDistance, trackpoints);
+                                        setElevation(interpolatedData.elevation); // Update elevation with interpolated value
+                                      } else {
+                                        alert("Distance cannot be greater than the last trackpoint.");
+                                        setInputDistance(maxDistance); // Reset input distance if it exceeds maxDistance
+                                        setDistance(maxDistance); // Ensure distance state is also set to maxDistance
+                                        const interpolatedData = interpolateTrackpointData(maxDistance, trackpoints);
+                                        setElevation(interpolatedData.elevation); // Update elevation with interpolated value at maxDistance
+                                      }
+                                    }
+                                  }}
+                                  placeholder="Distance from Start (km)" 
                                 />
+
 
                                 <VibrantButton primary type="submit">Save Changes</VibrantButton>
                                 <CancelButton type="button" onClick={(e) => {
