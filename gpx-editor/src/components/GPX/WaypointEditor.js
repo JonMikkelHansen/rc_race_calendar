@@ -35,27 +35,70 @@ const WaypointInfo = styled.div`
 `;  
 
 const StyledForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  background: none;
-  padding: 10px;
-  border-radius: 5px;
-  margin-top: 5px;
-  transition: max-height 0.3s ease-out;
-  overflow: hidden;
+display: grid;
+grid-template-columns: repeat(5, 1fr); /* Four columns of equal width */
+grid-gap: 10px; /* Spacing between grid items */
+align-items: top; /* Align items vertically */
+width: 100%;
+margin: 1em 2em 1em .1em;
+
+/* Adjust the size of specific grid items if necessary */
+.full-width {
+  grid-column: 1 / -1; /* Makes the item take up the whole width */
+}
+
+.span-2 { /* Class to make an item span two columns */
+    grid-column: span 2;
+  }
+
+.span-3 { /* Class to make an item span three columns */
+  grid-column: span 3;
+}
+
+.span-4 { /* Class to make an item span all four columns */
+  grid-column: span 4;
+}
+
+.span-down-3 {
+  grid-row: span 3; /* Makes the item span two rows */
+}
+
+/* Style for labels to align with the inputs */
+label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Optional: Style for the input and textarea elements */
+input, textarea, select {
+  width: 92%; /* Make input fields take up the full width of their grid column */
+  padding: 0.5em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+select{
+  width: 100%;
+}
+
+/* Button styling */
+button {
+  justify-self: start; /* Align buttons to the start of their grid column */
+}
   max-height: ${props => props.isActive ? '500px' : '0'}; // Use props to toggle height
 `;
 
 const FormInput = styled.input`
-  padding: 8px;
+  padding: 0.5em;
   border: 1px solid #ccc;
   border-radius: 4px;
 `;
 
 const FormTextarea = styled.textarea`
-  padding: 8px;
+  padding: 0.5em
   border: 1px solid #ccc;
   border-radius: 4px;
+  min-height: 12em;
 `;
 
 const WaypointList = styled.ul`
@@ -75,7 +118,7 @@ const WaypointItem = styled.li`
   font-size: 0.8rem; // Smaller font size
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   cursor: pointer;
 
   &:hover {
@@ -328,24 +371,41 @@ export const WaypointEditor = () => {
                           <StyledForm
                             isActive={true} // Always true because we're not toggling it closed anymore
                             onSubmit={handleSubmit}
-                            style={{
-                                maxHeight: "500px", // Always showing when active
-                                overflow: "hidden",
-                                transition: "max-height 0.3s ease-out"
-                            }}
-                          >
-                                <FormInput 
-                                    type="text" 
-                                    defaultValue={waypoint.name} 
-                                    onChange={(e) => setName(e.target.value)} 
-                                    placeholder="Waypoint Name" 
-                                />
+                            
+                          > 
+                            <div className='span-3'>
+                              <label htmlFor="name">Name</label>
+                              <FormInput 
+                                  id="name"
+                                  type="text" 
+                                  defaultValue={waypoint.name} 
+                                  onChange={(e) => setName(e.target.value)} 
+                                  placeholder="Waypoint Name" 
+                              />
+                            </div>
+                            <div className='span-2'>
+                              <label htmlFor="name">Type</label>
+                              <select>
+                                <option value="">Select a type</option>
+                                <option value="option1">Climb</option>
+                                <option value="option2">Sprint</option>
+                                <option value="option3">Scenarie</option>
+                                <option value="option4">Other</option>
+                              </select>
+                            </div>
+                            <div className='span-3 span-down-3'>
                                 <FormTextarea 
+                                    id='description'
+                                    type="textarea"
                                     defaultValue={waypoint.description} 
                                     onChange={(e) => setDescription(e.target.value)} 
                                     placeholder="Description" 
                                 />
+                             </div>
+                             <div className='span-2'>
+                              <label htmlFor="elevation">Elevation (m)</label>
                                 <FormInput 
+                                  id="elevation"
                                   type="number" 
                                   value={elevation.toString()} 
                                   onChange={(e) => {
@@ -356,8 +416,11 @@ export const WaypointEditor = () => {
                                   }} 
                                   placeholder="Elevation (m)" 
                                 />
-
+                              </div>
+                              <div className='span-2'>
+                                <label htmlFor="distance">Distance from start (km)</label>
                                 <FormInput 
+                                  id="distance"
                                   type="number" 
                                   value={inputDistance.toString()} // Use inputDistance for value
                                   onChange={(e) => {
@@ -379,13 +442,13 @@ export const WaypointEditor = () => {
                                   }}
                                   placeholder="Distance from Start (km)" 
                                 />
+                              </div>
 
-
-                                <SaveButton primary type="submit">Save Changes</SaveButton>
                                 <CancelButton type="button" onClick={(e) => {
                                     e.stopPropagation(); // Prevent click from bubbling up to the WaypointItem's onClick
                                     setEditWaypointId(null); // Collapse the form without saving changes
                                 }}>Cancel</CancelButton>
+                                <SaveButton primary type="submit">Save Changes</SaveButton>
                             </StyledForm>
                         ) : (
                           // Display waypoint information when it's not in edit mode
