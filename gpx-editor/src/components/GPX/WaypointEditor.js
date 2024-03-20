@@ -342,19 +342,42 @@ export const WaypointEditor = () => {
         setDistance(0);
     };
 
-    // Add this handler function
     const handleDistanceChange = (e) => {
-      const newDistance = parseFloat(e.target.value);
-      if (!isNaN(newDistance) && newDistance >= 0 && newDistance <= maxDistance) {
-        setDistance(newDistance); // Update the distance state
-        setInputDistance(newDistance); // Update the input distance state
-        // Call interpolateTrackpointData to get the interpolated elevation
-        const interpolatedData = interpolateTrackpointData(newDistance, trackpoints);
-        if (interpolatedData) {
-          setElevation(interpolatedData.elevation); // Update the elevation state with the interpolated value
+      const newValue = e.target.value;
+    
+      // Handle case when input is cleared
+      if (newValue === '') {
+        setInputDistance(''); // Allow the field to be empty, enabling users to clear the input
+      } else {
+        const newDistance = parseFloat(newValue);
+        // Check if the parsed distance is a number
+        if (!isNaN(newDistance)) {
+          // Check if newDistance is within the allowed range
+          if (newDistance >= 0 && newDistance <= maxDistance) {
+            setInputDistance(newDistance); // Update the input with new value if within range
+            setDistance(newDistance); // Update the distance state
+            // Update elevation based on the new distance
+            const interpolatedData = interpolateTrackpointData(newDistance, trackpoints);
+            if (interpolatedData) {
+              setElevation(interpolatedData.elevation);
+            }
+          } else {
+            // If newDistance is out of bounds, reset to the maxDistance
+            alert("Distance cannot be greater than the last trackpoint.");
+            setInputDistance(maxDistance); // Reset input to maxDistance if out of bounds
+            setDistance(maxDistance); // Ensure distance state is also set to maxDistance
+            // Update elevation at maxDistance
+            const interpolatedData = interpolateTrackpointData(maxDistance, trackpoints);
+            if (interpolatedData) {
+              setElevation(interpolatedData.elevation);
+            }
+          }
         }
       }
     };
+    
+    
+    
 
     return (
       <EditorContainer>
@@ -422,23 +445,7 @@ export const WaypointEditor = () => {
                                   id="distance"
                                   type="number" 
                                   value={distance.toString()}
-                                  onChange={(e) => {
-                                    const newDistance = parseFloat(e.target.value);
-                                    setInputDistance(newDistance); // Update the inputDistance state as the user types
-                                    if (!isNaN(newDistance)) {
-                                      if (newDistance <= maxDistance) {
-                                        setDistance(newDistance); // Update distance only if within the allowed range
-                                        const interpolatedData = interpolateTrackpointData(newDistance, trackpoints);
-                                        setElevation(interpolatedData.elevation); // Update elevation with interpolated value
-                                      } else {
-                                        alert("Distance cannot be greater than the last trackpoint.");
-                                        setInputDistance(maxDistance); // Reset input distance if it exceeds maxDistance
-                                        setDistance(maxDistance); // Ensure distance state is also set to maxDistance
-                                        const interpolatedData = interpolateTrackpointData(maxDistance, trackpoints);
-                                        setElevation(interpolatedData.elevation); // Update elevation with interpolated value at maxDistance
-                                      }
-                                    }
-                                  }}
+                                  onChange={handleDistanceChange}
                                   placeholder="Distance from Start (km)" 
                                 />
                               </div>
