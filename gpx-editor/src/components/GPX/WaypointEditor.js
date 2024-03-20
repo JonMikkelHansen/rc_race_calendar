@@ -205,6 +205,7 @@ export const WaypointEditor = () => {
     // Add this new state to keep track of the input value independently
     const [inputDistance, setInputDistance] = useState(0);
     const maxDistance = trackpoints[trackpoints.length - 1]?.distanceFromStart || 0;
+    const [type, setType] = useState('');
 
     const logUserCreatedTrackpoints = () => {
         const userCreatedTrackpoints = trackpoints.filter(tp => tp.userCreated);
@@ -260,11 +261,16 @@ export const WaypointEditor = () => {
   
 
     const handleEditClick = (waypoint) => {
+      if (editWaypointId !== waypoint.id) {
         setEditWaypointId(waypoint.id);
         setName(waypoint.name);
         setDescription(waypoint.description || '');
         setElevation(waypoint.elevation || 0);
         setDistance(waypoint.distanceFromStart); // Keeping the distance as is without converting
+        setType(waypoint.type || "null");
+      }else{
+
+      }
     };
 
     const handleDeleteClick = (waypointId) => {
@@ -285,6 +291,7 @@ export const WaypointEditor = () => {
         description,
         elevation: elevation,
         distanceFromStart: distance,
+        type,
       };
     
       // Dispatch the updated action creator
@@ -298,6 +305,7 @@ export const WaypointEditor = () => {
         setDescription('');
         setElevation(0);
         setDistance(0);
+        setType('null');
     };
 
     const handleAddClick = () => {
@@ -356,16 +364,7 @@ export const WaypointEditor = () => {
             {waypoints.map((waypoint) => (
               <WaypointItem
                 key={waypoint.id}
-                onClick={() => {
-                  // Set the edit state for the clicked waypoint, unless it's already being edited
-                  if (editWaypointId !== waypoint.id) {
-                    setEditWaypointId(waypoint.id);
-                    setName(waypoint.name);
-                    setDescription(waypoint.description || '');
-                    setElevation(waypoint.elevation || 0);
-                    setDistance(waypoint.distanceFromStart);
-                  }
-                }}
+                onClick={() => handleEditClick(waypoint)} // Call handleEditClick with the waypoint
               >
                 {editWaypointId === waypoint.id ? (
                           <StyledForm
@@ -385,12 +384,12 @@ export const WaypointEditor = () => {
                             </div>
                             <div className='span-2'>
                               <label htmlFor="name">Type</label>
-                              <select>
-                                <option value="">Select a type</option>
-                                <option value="option1">Climb</option>
-                                <option value="option2">Sprint</option>
-                                <option value="option3">Scenarie</option>
-                                <option value="option4">Other</option>
+                              <select value={type} onChange={(e) => setType(e.target.value)}>
+                                <option value="null">Select a type</option>
+                                <option value="climb">Climb</option>
+                                <option value="sprint">Sprint</option>
+                                <option value="scenic">Scenic</option>
+                                <option value="other">Other</option>
                               </select>
                             </div>
                             <div className='span-3 span-down-3'>
@@ -422,7 +421,7 @@ export const WaypointEditor = () => {
                                 <FormInput 
                                   id="distance"
                                   type="number" 
-                                  value={inputDistance.toString()} // Use inputDistance for value
+                                  value={distance.toString()}
                                   onChange={(e) => {
                                     const newDistance = parseFloat(e.target.value);
                                     setInputDistance(newDistance); // Update the inputDistance state as the user types

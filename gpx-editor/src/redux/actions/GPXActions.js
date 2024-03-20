@@ -49,7 +49,7 @@ export const setWaypoints = (waypoints) => ({
 export const ADD_WAYPOINT = 'ADD_WAYPOINT';
 export const addWaypoint = (waypoint) => ({
   type: ADD_WAYPOINT,
-  payload: { ...waypoint, id: uuidv4() }, // Generate a unique ID for the waypoint
+  payload: { ...waypoint, id: uuidv4(), type: waypoint.type }, // Generate a unique ID for the waypoint
 });
 
 export const DELETE_WAYPOINT = 'DELETE_WAYPOINT';
@@ -67,9 +67,10 @@ export const updateWaypoint = (waypoint) => {
     // Update the waypoint with interpolated data
     const updatedWaypoint = {
       ...waypoint,
-      lat: interpolatedData.lat,
-      lon: interpolatedData.lon,
+      latitude: interpolatedData.lat,
+      longitude: interpolatedData.lon,
       elevation: interpolatedData.elevation,
+      type: waypoint.type, // Add this line to include waypoint type
     };
     
     dispatch({
