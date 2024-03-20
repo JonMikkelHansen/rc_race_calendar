@@ -206,6 +206,7 @@ export const WaypointEditor = () => {
     const [inputDistance, setInputDistance] = useState(0);
     const maxDistance = trackpoints[trackpoints.length - 1]?.distanceFromStart || 0;
     const [type, setType] = useState('');
+    const [elevationEdited, setElevationEdited] = useState(false);
 
     const logUserCreatedTrackpoints = () => {
         const userCreatedTrackpoints = trackpoints.filter(tp => tp.userCreated);
@@ -285,17 +286,21 @@ export const WaypointEditor = () => {
 
     const handleSubmit = (e) => {
       e.preventDefault();
+      const finalElevation = elevationEdited ? elevation : findNearestTrackpointElevation(distance);
       const waypointData = {
-        id: editWaypointId, // No longer 'new', it should be the actual ID of the waypoint
+        id: editWaypointId, 
         name,
         description,
-        elevation: elevation,
+        elevation: finalElevation,
         distanceFromStart: distance,
         type,
+        elevationEdited,
       };
-    
-      // Dispatch the updated action creator
-      dispatch(updateWaypoint(waypointData));
+      if(editWaypointId) {
+        dispatch(updateWaypoint(waypointData));
+      } else {
+        dispatch(addWaypointAndTrackpoint(waypointData)); // Make sure this action appropriately handles the elevation too
+      }
       resetForm();
     };
 
@@ -306,6 +311,7 @@ export const WaypointEditor = () => {
         setElevation(0);
         setDistance(0);
         setType('null');
+        setElevationEdited(false); 
     };
 
     const handleAddClick = () => {
@@ -342,6 +348,15 @@ export const WaypointEditor = () => {
         setDistance(0);
     };
 
+
+    const handleElevationChange = (e) => {
+      const newElevation = parseFloat(e.target.value);
+      if (!isNaN(newElevation)) {
+        setElevation(newElevation);
+        setElevationEdited(true); // Mark elevation as manually edited
+      }
+    };
+
     const handleDistanceChange = (e) => {
       const newValue = e.target.value;
     
@@ -357,8 +372,8 @@ export const WaypointEditor = () => {
             setInputDistance(newDistance); // Update the input with new value if within range
             setDistance(newDistance); // Update the distance state
             // Update elevation based on the new distance
-            const interpolatedData = interpolateTrackpointData(newDistance, trackpoints);
-            if (interpolatedData) {
+            if (!elevationEdited) { // Check if elevation was manually edited
+              const interpolatedData = interpolateTrackpointData(newDistance, trackpoints);
               setElevation(interpolatedData.elevation);
             }
           } else {
@@ -430,12 +445,7 @@ export const WaypointEditor = () => {
                                   id="elevation"
                                   type="number" 
                                   value={elevation.toString()} 
-                                  onChange={(e) => {
-                                    const newElevation = parseFloat(e.target.value);
-                                    if (!isNaN(newElevation)) {
-                                      setElevation(newElevation); // Update elevation only if the input is a number
-                                    }
-                                  }} 
+                                  onChange={handleElevationChange}
                                   placeholder="Elevation (m)" 
                                 />
                               </div>

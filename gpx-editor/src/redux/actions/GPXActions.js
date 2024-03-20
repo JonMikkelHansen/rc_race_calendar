@@ -62,40 +62,48 @@ export const UPDATE_WAYPOINT = 'UPDATE_WAYPOINT';
 export const updateWaypoint = (waypoint) => {
   return (dispatch, getState) => {
     const { trackpoints } = getState();
-    const interpolatedData = interpolateTrackpointData(waypoint.distanceFromStart, trackpoints);
     
-    // Update the waypoint with interpolated data
+    let finalElevation = waypoint.elevation;
+    if (!waypoint.elevationEdited) {
+      // Only interpolate elevation if it hasn't been manually edited
+      const interpolatedData = interpolateTrackpointData(waypoint.distanceFromStart, trackpoints);
+      finalElevation = interpolatedData.elevation;
+    }
+
+    // Update the waypoint, including the final elevation
     const updatedWaypoint = {
       ...waypoint,
-      latitude: interpolatedData.lat,
-      longitude: interpolatedData.lon,
-      elevation: interpolatedData.elevation,
-      type: waypoint.type, // Add this line to include waypoint type
+      elevation: finalElevation,
+      // Note: latitude and longitude are not necessarily updated here unless needed for your application logic
     };
-    
+
     dispatch({
       type: UPDATE_WAYPOINT,
       payload: updatedWaypoint,
     });
-    
-    // Find and update the corresponding trackpoint
+
+    // Find and update the corresponding trackpoint to ensure consistency
     const trackpointIndex = trackpoints.findIndex(tp => tp.waypointID === waypoint.id);
     if (trackpointIndex !== -1) {
       const updatedTrackpoint = {
         ...trackpoints[trackpointIndex],
-        latitude: interpolatedData.lat,
-        longitude: interpolatedData.lon,
-        elevation: interpolatedData.elevation,
-        distanceFromStart: waypoint.distanceFromStart,
+        // Assuming you want to keep latitude and longitude in sync with any potential updates
+        latitude: waypoint.latitude ?? trackpoints[trackpointIndex].latitude,
+        longitude: waypoint.longitude ?? trackpoints[trackpointIndex].longitude,
+        elevation: finalElevation, // Use the same elevation as the waypoint
+        distanceFromStart: waypoint.distanceFromStart, // Ensure distance is updated if changed
       };
-      
-      // Update the trackpoint in the Redux store
+
+      // Create a new array of trackpoints with the updated entry
       const newTrackpoints = [...trackpoints];
       newTrackpoints[trackpointIndex] = updatedTrackpoint;
+
+      // Dispatch an action to update the array of trackpoints in the Redux store
       dispatch(setTrackpoints(newTrackpoints));
     }
   };
 };
+
 
 
 export const ADD_TRACKPOINT = 'ADD_TRACKPOINT';
