@@ -1,4 +1,3 @@
-// GPXMap.js
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -8,21 +7,38 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoiam9uaGFuc2VuIiwiYSI6ImNrdXF0cTBsazA2emkyb3A1Y
 
 const GPXMap = () => {
     const mapContainerRef = useRef(null);
-    const trackpoints = useSelector((state) => state.trackpoints); // Ensure this selector is correct
+    const trackpoints = useSelector((state) => state.trackpoints);
 
     useEffect(() => {
         const map = new mapboxgl.Map({
             container: mapContainerRef.current,
-            style: 'mapbox://styles/mapbox/streets-v11', // Preferable map style
-            center: [0, 0], // Initial center, will be adjusted later
-            zoom: 2, // Initial zoom
+            style: 'mapbox://styles/jonhansen/clu14zcjr00o701qw9sxd44ty', // Ensure this is a style that supports 3D terrain
+            center: [0, 0],
+            zoom: 2,
+            pitch: 70, // Set the initial pitch
+            bearing: 0, // Set the initial bearing to face north
         });
 
-        const resizeMap = () => map.resize(); // Function to resize the map
+        const resizeMap = () => map.resize();
 
         map.on('load', () => {
-            resizeMap(); // Trigger resize after the map is loaded to ensure tiles load correctly
+            resizeMap();
 
+            // Enable 3D terrain
+            map.setTerrain({ 'source': 'mapbox.mapbox-terrain-dem-v1', 'exaggeration': 1.5 });
+
+            // Add a sky layer to enhance the 3D effect
+            map.addLayer({
+                'id': 'sky',
+                'type': 'sky',
+                'paint': {
+                    'sky-type': 'atmosphere',
+                    'sky-atmosphere-sun': [0.0, 0.0],
+                    'sky-atmosphere-sun-intensity': 15
+                }
+            });
+
+            // Check if trackpoints are available
             if (trackpoints.length > 0) {
                 const geojsonData = {
                     type: "FeatureCollection",
@@ -35,7 +51,33 @@ const GPXMap = () => {
                     }],
                 };
 
-                // Adding the source and the layer for the track
+                // Process for shadow layer
+                const offsetShadow = geojsonData.features.map(feature => ({
+                    ...feature,
+                    geometry: {
+                        ...feature.geometry,
+                        coordinates: feature.geometry.coordinates.map(([lng, lat]) => [lng + 0.005, lat - 0.005]),
+                    }
+                }));
+
+                // Adding shadow as a layer
+                map.addSource('track-shadow', { type: 'geojson', data: { ...geojsonData, features: offsetShadow } });
+                map.addLayer({
+                    id: 'track-shadow',
+                    type: 'line',
+                    source: 'track-shadow',
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round',
+                    },
+                    paint: {
+                        'line-color': '#000000',
+                        'line-width': 4,
+                        'line-opacity': 0.5,
+                    },
+                });
+
+                // Adding the main track layer
                 map.addSource('track', { type: 'geojson', data: geojsonData });
                 map.addLayer({
                     id: 'track',
@@ -46,32 +88,34 @@ const GPXMap = () => {
                         'line-cap': 'round',
                     },
                     paint: {
-                        'line-color': '#007cbf',
+                        'line-color': '#FFFFFF',
                         'line-width': 4,
                     },
                 });
 
-                // Calculate bounds from the trackpoints and fit the map to these bounds
+                // Calculate and fit map bounds to trackpoints
                 const bounds = new mapboxgl.LngLatBounds();
                 trackpoints.forEach(tp => bounds.extend(new mapboxgl.LngLat(tp.longitude, tp.latitude)));
-                map.fitBounds(bounds, { padding: 20 }); // Adjust the view to the track
+                map.fitBounds(bounds, { padding: 20, pitch: 70, duration: 0 });
+
+                // Adjust pitch and bearing after fitBounds completes
+                map.once('moveend', () => {
+                    map.easeTo({ pitch: 70, bearing: 0 });
+                });
             }
         });
 
-        // Set up ResizeObserver to ensure the map resizes with the container
+        // Setup ResizeObserver for map container resizing
         const resizeObserver = new ResizeObserver(() => resizeMap());
         resizeObserver.observe(mapContainerRef.current);
 
-        // Clean up on unmount
+        // Cleanup on unmount
         return () => {
-            if (map) {
-                map.remove();
-            }
+            if (map) map.remove();
             resizeObserver.unobserve(mapContainerRef.current);
         };
-    }, [trackpoints]); // Dependency array for re-running the effect when trackpoints change
+    }, [trackpoints]);
 
-    // The aspect ratio for 16:9 would be 56.25% (9 / 16 = 0.5625)
     return <div ref={mapContainerRef} style={{ width: '100%', height: '0', paddingBottom: '56.25%', position: 'relative' }} />;
 };
 
