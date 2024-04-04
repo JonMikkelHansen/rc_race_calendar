@@ -16,7 +16,7 @@ module.exports = {
 
     // Check if the input date is within the next 7 days (for forecast)
     if (inputDate.isBetween(currentDate, moment().add(7, 'days'), null, '[]')) {
-      url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+      url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
       // Forecast API call (OpenWeatherMap doesn't allow specifying a day for future forecasts in the free tier,
       // you'll need to filter the desired day client-side from the daily array in the response)
     } else if (inputDate.isBefore(currentDate)) {
