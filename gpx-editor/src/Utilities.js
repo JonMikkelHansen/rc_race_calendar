@@ -83,45 +83,45 @@ export function douglasPeucker(points, tolerance) {
 export function perpendicularDistance(point, line) {
   const start = line.start;
   const end = line.end;
-  const dx = end.longitude - start.longitude;
-  const dy = end.latitude - start.latitude;
+  const dx = end.lon - start.lon;
+  const dy = end.lat - start.lat;
   const denominator = dx * dx + dy * dy;
 
   if (denominator === 0) {
     return calculateHaversineDistance(
-      point.latitude,
-      point.longitude,
-      start.latitude,
-      start.longitude
+      point.lat,
+      point.lon,
+      start.lat,
+      start.lon
     );
   }
 
-  const t = ((point.longitude - start.longitude) * dx + (point.latitude - start.latitude) * dy) / denominator;
+  const t = ((point.lon - start.lon) * dx + (point.lat - start.lat) * dy) / denominator;
 
   if (t < 0) {
     return calculateHaversineDistance(
-      point.latitude,
-      point.longitude,
-      start.latitude,
-      start.longitude
+      point.lat,
+      point.lon,
+      start.lat,
+      start.lon
     );
   } else if (t > 1) {
     return calculateHaversineDistance(
-      point.latitude,
-      point.longitude,
-      end.latitude,
-      end.longitude
+      point.lat,
+      point.lon,
+      end.lat,
+      end.lon
     );
   } else {
     const closestPoint = {
-      longitude: start.longitude + t * dx,
-      latitude: start.latitude + t * dy,
+      lon: start.lon + t * dx,
+      lat: start.lat + t * dy,
     };
     return calculateHaversineDistance(
-      point.latitude,
-      point.longitude,
-      closestPoint.latitude,
-      closestPoint.longitude
+      point.lat,
+      point.lon,
+      closestPoint.lat,
+      closestPoint.lon
     );
   }
 }
@@ -147,9 +147,9 @@ const interpolateTrackpointData = (distance, trackpoints) => {
   const maxDistance = sortedTrackpoints[sortedTrackpoints.length - 1].distanceFromStart;
   if (distance >= maxDistance) {
     // Return the last trackpoint data directly if distance is at or beyond the last trackpoint
-    const { latitude, longitude, elevation } = sortedTrackpoints[sortedTrackpoints.length - 1];
+    const { lat, lon, elevation } = sortedTrackpoints[sortedTrackpoints.length - 1];
     console.log("Using last trackpoint data for interpolation.");
-    return { lat: latitude, lon: longitude, elevation };
+    return { lat: lat, lon: lon, elevation };
   }
 
   let before = sortedTrackpoints[0], after = sortedTrackpoints[1];
@@ -169,8 +169,8 @@ const interpolateTrackpointData = (distance, trackpoints) => {
     console.log("Identical before and after distances, returning before's data.");
     // Cannot interpolate between two points at the same distance; return before's data
     return {
-      lat: Number(before.latitude.toFixed(6)),
-      lon: Number(before.longitude.toFixed(6)),
+      lat: Number(before.lat.toFixed(6)),
+      lon: Number(before.lon.toFixed(6)),
       elevation: Number(before.elevation.toFixed(1))
     };
   }
@@ -178,8 +178,8 @@ const interpolateTrackpointData = (distance, trackpoints) => {
   const ratio = (distance - before.distanceFromStart) / (after.distanceFromStart - before.distanceFromStart);
   console.log("Interpolation ratio:", ratio);
 
-  const lat = before.latitude + ratio * (after.latitude - before.latitude);
-  const lon = before.longitude + ratio * (after.longitude - before.longitude);
+  const lat = before.lat + ratio * (after.lat - before.lat);
+  const lon = before.lon + ratio * (after.lon - before.lon);
   const elevation = before.elevation + ratio * (after.elevation - before.elevation);
 
   // Check if the interpolated values are numbers

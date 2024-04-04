@@ -327,8 +327,8 @@ export const WaypointEditor = () => {
         const newWaypoint = {
             name: '', // Default to an empty name
             description: '', // Default to an empty description            
-            latitude: interpolatedData.lat,
-            longitude: interpolatedData.lon,
+            lat: interpolatedData.lat,
+            lon: interpolatedData.lon,
             elevation: interpolatedData.elevation,
             distanceFromStart: 0,
             createdAt: new Date().toISOString(), // Add a timestamp
@@ -424,10 +424,12 @@ export const WaypointEditor = () => {
                               <label htmlFor="name">Type</label>
                               <select value={type} onChange={(e) => setType(e.target.value)}>
                                 <option value="null">Select a type</option>
+                                <option value="start">Start</option>
                                 <option value="climb">Climb</option>
                                 <option value="sprint">Sprint</option>
-                                <option value="scenic">Scenic</option>
+                                <option value="scenario">Scenario</option>
                                 <option value="other">Other</option>
+                                <option value="end">End</option>
                               </select>
                             </div>
                             <div className='span-3 span-down-3'>

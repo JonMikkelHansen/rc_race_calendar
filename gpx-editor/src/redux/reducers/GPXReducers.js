@@ -1,7 +1,7 @@
 import { 
   FETCH_RACES_SUCCESS, SELECT_RACE, SELECT_STAGE,
   SET_MINY, SET_MAXY, SET_TOLERANCE, SET_TENSION, 
-  SET_TRACKPOINTS, ADD_TRACKPOINT, UPDATE_TRACKPOINT, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT, ADD_SEGMENT, EDIT_SEGMENT, DELETE_SEGMENT,
+  SET_TRACKPOINTS, ADD_TRACKPOINT, UPDATE_TRACKPOINT, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT, SET_TRACKPOINT_GEOJSON, SET_WAYPOINT_GEOJSON, ADD_SEGMENT, EDIT_SEGMENT, DELETE_SEGMENT,
   SET_SHOW_TRACKPOINTS, SET_SHOW_WAYPOINTS, SET_SHOW_ANNOTATIONS,
   SET_STAGE_TITLE // Import the new action type
 } from '../actions/GPXActions';
@@ -17,6 +17,8 @@ const initialState = {
   tension: 0.2,
   trackpoints: [],
   waypoints: [],
+  trackpointGeoJSON: null,
+  waypointGeoJSON: null,  
   segments: [],
   showTrackpoints: false,
   showWaypoints: true,
@@ -68,6 +70,10 @@ const GPXReducer = (state = initialState, action) => {
       return { ...state, waypoints: state.waypoints.filter(wp => wp.id !== action.payload) };
     case UPDATE_WAYPOINT:
       return { ...state, waypoints: state.waypoints.map(wp => wp.id === action.payload.id ? action.payload : wp) };
+    case SET_TRACKPOINT_GEOJSON:
+      return { ...state, trackpointGeoJSON: action.payload };
+    case SET_WAYPOINT_GEOJSON:
+      return { ...state, waypointGeoJSON: action.payload};      
     case ADD_SEGMENT:
       return {
         ...state,

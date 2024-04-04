@@ -1,0 +1,13 @@
+{
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/weather",
+        "handler": "weather.findOne",
+        "config": {
+          "policies": []
+        }
+      }
+    ]
+  }
+  

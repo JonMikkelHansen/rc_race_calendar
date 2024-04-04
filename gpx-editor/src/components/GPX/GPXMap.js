@@ -7,25 +7,23 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoiam9uaGFuc2VuIiwiYSI6ImNrdXF0cTBsazA2emkyb3A1Y
 
 const GPXMap = () => {
     const mapContainerRef = useRef(null);
-    const trackpoints = useSelector((state) => state.trackpoints);
+    const trackpointGeoJSON = useSelector((state) => state.trackpointGeoJSON);
+    const waypointGeoJSON = useSelector((state) => state.waypointGeoJSON);
 
     useEffect(() => {
         const map = new mapboxgl.Map({
             container: mapContainerRef.current,
             style: 'mapbox://styles/jonhansen/clu14zcjr00o701qw9sxd44ty', // Ensure this is a style that supports 3D terrain
+            // style: 'mapbox://styles/mapbox/outdoors-v11',
             center: [0, 0],
             zoom: 2,
             pitch: 70, // Set the initial pitch
             bearing: 0, // Set the initial bearing to face north
         });
 
-        const resizeMap = () => map.resize();
-
         map.on('load', () => {
-            resizeMap();
-
             // Enable 3D terrain
-            map.setTerrain({ 'source': 'mapbox.mapbox-terrain-dem-v1', 'exaggeration': 1.5 });
+            map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
 
             // Add a sky layer to enhance the 3D effect
             map.addLayer({
@@ -38,30 +36,19 @@ const GPXMap = () => {
                 }
             });
 
-            // Check if trackpoints are available
-            if (trackpoints.length > 0) {
-                const geojsonData = {
-                    type: "FeatureCollection",
-                    features: [{
-                        type: "Feature",
-                        geometry: {
-                            type: "LineString",
-                            coordinates: trackpoints.map(tp => [tp.longitude, tp.latitude]),
-                        },
-                    }],
-                };
-
-                // Process for shadow layer
-                const offsetShadow = geojsonData.features.map(feature => ({
+            if (trackpointGeoJSON && trackpointGeoJSON.features && trackpointGeoJSON.features.length > 0) {
+                // Shadow layer
+                const shadowGeoJSON = JSON.parse(JSON.stringify(trackpointGeoJSON)); // Deep clone to avoid mutating the original
+                shadowGeoJSON.features = shadowGeoJSON.features.map(feature => ({
                     ...feature,
                     geometry: {
                         ...feature.geometry,
-                        coordinates: feature.geometry.coordinates.map(([lng, lat]) => [lng + 0.005, lat - 0.005]),
+                        coordinates: feature.geometry.coordinates.map(([lng, lat]) => [lng + 0.005, lat - 0.005])
                     }
                 }));
 
-                // Adding shadow as a layer
-                map.addSource('track-shadow', { type: 'geojson', data: { ...geojsonData, features: offsetShadow } });
+                // Adding the shadow layer
+                map.addSource('track-shadow', { type: 'geojson', data: shadowGeoJSON });
                 map.addLayer({
                     id: 'track-shadow',
                     type: 'line',
@@ -77,8 +64,8 @@ const GPXMap = () => {
                     },
                 });
 
-                // Adding the main track layer
-                map.addSource('track', { type: 'geojson', data: geojsonData });
+                // Main track layer
+                map.addSource('track', { type: 'geojson', data: trackpointGeoJSON });
                 map.addLayer({
                     id: 'track',
                     type: 'line',
@@ -93,28 +80,59 @@ const GPXMap = () => {
                     },
                 });
 
-                // Calculate and fit map bounds to trackpoints
+                // Fit map to track bounds
                 const bounds = new mapboxgl.LngLatBounds();
-                trackpoints.forEach(tp => bounds.extend(new mapboxgl.LngLat(tp.longitude, tp.latitude)));
+                trackpointGeoJSON.features.forEach(feature => {
+                    feature.geometry.coordinates.forEach(coord => {
+                        bounds.extend(coord);
+                    });
+                });
                 map.fitBounds(bounds, { padding: 20, pitch: 70, duration: 0 });
+            }
 
-                // Adjust pitch and bearing after fitBounds completes
-                map.once('moveend', () => {
-                    map.easeTo({ pitch: 70, bearing: 0 });
+            // Waypoints layer
+            if (waypointGeoJSON && waypointGeoJSON.features && waypointGeoJSON.features.length > 0) {
+                /*map.addSource('waypoints', { type: 'geojson', data: waypointGeoJSON });
+                map.addLayer({
+                    id: 'waypoints',
+                    type: 'circle',
+                    source: 'waypoints',
+                    paint: {
+                        'circle-radius': 3,
+                        'circle-color': '#FF0000'
+                    }
+                }); */
+                waypointGeoJSON.features.forEach(feature => {
+                    // Custom HTML marker for each waypoint
+                    const el = document.createElement('div');
+                    el.className = 'waypoint-marker';
+
+                    const markerText = document.createElement('div');
+                    markerText.textContent = feature.properties.name;
+                    markerText.style.cssText = 'background: white; padding: 2px; border-radius: 3px;';
+                    el.appendChild(markerText);
+
+                    const line = document.createElement('div');
+                    line.style.cssText = 'height: 20px; width: 1px; background-color: black; margin: 0 auto; border: 2px dotted black;';
+                    el.appendChild(line);
+
+                    new mapboxgl.Marker(el)
+                        .setLngLat(feature.geometry.coordinates)
+                        .addTo(map);
                 });
             }
         });
 
-        // Setup ResizeObserver for map container resizing
-        const resizeObserver = new ResizeObserver(() => resizeMap());
+        // ResizeObserver for dynamic resizing
+        const resizeObserver = new ResizeObserver(() => map.resize());
         resizeObserver.observe(mapContainerRef.current);
 
-        // Cleanup on unmount
+        // Cleanup
         return () => {
-            if (map) map.remove();
-            resizeObserver.unobserve(mapContainerRef.current);
+            map.remove();
+            resizeObserver.disconnect();
         };
-    }, [trackpoints]);
+    }, [trackpointGeoJSON, waypointGeoJSON]); // Dependencies
 
     return <div ref={mapContainerRef} style={{ width: '100%', height: '0', paddingBottom: '56.25%', position: 'relative' }} />;
 };
