@@ -1,4 +1,4 @@
-// Path: src/api/weather/controllers/weather.js
+// src/api/weather/controllers/weather.js
 
 'use strict';
 
@@ -7,7 +7,8 @@ const axios = require('axios');
 module.exports = {
   async findOne(ctx) {
     const { lat, lon, timestamp } = ctx.query;
-    const apiKey = process.env.OPENWEATHER_API_KEY; // Ensure this is set in your environment variables
+    const apiKey = process.env.OPENWEATHER_API_KEY;
+    // Note: Adjust the API URL and parameters as needed for the OpenWeatherMap version 3.0 API
     const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
 
     try {
