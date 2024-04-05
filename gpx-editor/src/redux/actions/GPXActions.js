@@ -34,6 +34,22 @@ export const setMaxY = (maxY) => ({
   payload: maxY,
 });
 
+// CREATING TRACKPOINT GEOJSON OBJECT
+export const SET_TRACKPOINT_GEOJSON = 'SET_TRACKPOINT_GEOJSON';
+export const setTrackpointGeoJSON = (geojson) => ({
+  type: SET_TRACKPOINT_GEOJSON,
+  payload: geojson,
+});
+
+//CREATING WAYPOINT GEOJSON OBJECT
+export const SET_WAYPOINT_GEOJSON = 'SET_WAYPOINT_GEOJSON';
+export const setWaypointGeoJSON = (geojson) => ({
+  type: SET_WAYPOINT_GEOJSON,
+  payload: geojson,
+});
+
+// CREATING TRACKPOINTS
+
 export const SET_TRACKPOINTS = 'SET_TRACKPOINTS';
 export const setTrackpoints = (trackpoints) => ({
   type: SET_TRACKPOINTS,
@@ -88,8 +104,8 @@ export const updateWaypoint = (waypoint) => {
       const updatedTrackpoint = {
         ...trackpoints[trackpointIndex],
         // Assuming you want to keep latitude and longitude in sync with any potential updates
-        latitude: waypoint.latitude ?? trackpoints[trackpointIndex].latitude,
-        longitude: waypoint.longitude ?? trackpoints[trackpointIndex].longitude,
+        lat: waypoint.lat ?? trackpoints[trackpointIndex].lat,
+        lon: waypoint.lon ?? trackpoints[trackpointIndex].lon,
         elevation: finalElevation, // Use the same elevation as the waypoint
         distanceFromStart: waypoint.distanceFromStart, // Ensure distance is updated if changed
       };
@@ -103,8 +119,6 @@ export const updateWaypoint = (waypoint) => {
     }
   };
 };
-
-
 
 export const ADD_TRACKPOINT = 'ADD_TRACKPOINT';
 
