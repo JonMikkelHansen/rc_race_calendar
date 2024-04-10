@@ -202,3 +202,34 @@ const interpolateTrackpointData = (distance, trackpoints) => {
 export { interpolateTrackpointData };
 
 // Additional utility functions can be added as needed
+
+
+
+/**
+ * Formats a date string into a more readable format with a day suffix.
+ * @param {string} dateString - The date string to format.
+ * @return {string} The formatted date string.
+ */
+export function formatDate(dateString) {
+  const date = new Date(dateString);
+  const options = { month: 'short', day: 'numeric' };
+  const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
+  const day = date.getDate();
+  let daySuffix;
+
+  switch (day) {
+    case 1: case 21: case 31:
+      daySuffix = 'st';
+      break;
+    case 2: case 22:
+      daySuffix = 'nd';
+      break;
+    case 3: case 23:
+      daySuffix = 'rd';
+      break;
+    default:
+      daySuffix = 'th';
+  }
+
+  return formattedDate.replace(new RegExp(` ${day}`), ` ${day}${daySuffix}`);
+}

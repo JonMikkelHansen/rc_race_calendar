@@ -23,7 +23,7 @@ function App() {
         <Header />
         <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
         <div style={{ display: activeTab === 'Race' ? 'block' : 'none' }}>
-          {/*<RaceList /> */}
+          <RaceList /> 
         </div>
         <div style={{ display: activeTab === 'GPX' ? 'block' : 'none' }}>
           <GPXUploader onGPXData={handleGPXData} />

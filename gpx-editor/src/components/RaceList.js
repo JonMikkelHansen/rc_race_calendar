@@ -1,46 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchRacesAsync, selectRace, fetchAllSeasons } from '../redux/actions/GPXActions';
-
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  const options = { month: 'short', day: 'numeric' };
-  const formattedDate = new Intl.DateTimeFormat('en-US', options).format(date);
-  const day = date.getDate();
-  let daySuffix;
-
-  switch (day) {
-    case 1: case 21: case 31:
-      daySuffix = 'st';
-      break;
-    case 2: case 22:
-      daySuffix = 'nd';
-      break;
-    case 3: case 23:
-      daySuffix = 'rd';
-      break;
-    default:
-      daySuffix = 'th';
-  }
-
-  return formattedDate.replace(new RegExp(` ${day}`), ` ${day}${daySuffix}`);
-}
+import { fetchRacesAsync, selectRace } from '../redux/actions/GPXActions';
+import { formatDate } from '../Utilities';
 
 function RaceList() {
   const dispatch = useDispatch();
   const races = useSelector(state => state.races) || [];
   const [selectedSeason, setSelectedSeason] = useState(new Date().getFullYear());
+  const [expandedRaces, setExpandedRaces] = useState([]);
 
   useEffect(() => {
-        // Dispatch fetchAllSeasons to populate season dropdown options
-        dispatch(fetchAllSeasons());
-
-        // Immediately fetch races for the selected season (current year) on component mount
-        dispatch(fetchRacesAsync(selectedSeason.toString()));
-  }, [dispatch]);
-
-  useEffect(() => {
-    dispatch(fetchRacesAsync(selectedSeason));
+    // Dispatch fetchRacesAsync to fetch races for the selected season on component mount
+    dispatch(fetchRacesAsync(selectedSeason.toString()));
   }, [dispatch, selectedSeason]);
 
   const handleRaceSelect = (raceId) => {
@@ -51,6 +22,14 @@ function RaceList() {
     setSelectedSeason(Number(e.target.value));
   };
 
+  const toggleExpandRace = (raceId) => {
+    if (expandedRaces.includes(raceId)) {
+      setExpandedRaces(expandedRaces.filter(id => id !== raceId));
+    } else {
+      setExpandedRaces([...expandedRaces, raceId]);
+    }
+  };
+
   // Sort races by race_start_date
   const sortedRaces = races.sort((a, b) => new Date(a.race_start_date) - new Date(b.race_start_date));
 
@@ -59,21 +38,29 @@ function RaceList() {
       <h2>Select a Race</h2>
       <label htmlFor="season-select">Season:</label>
       <select id="season-select" value={selectedSeason} onChange={handleSeasonChange}>
+        {/* Hardcoded season options */}
         <option value={2023}>2023</option>
         <option value={2024}>2024</option>
       </select>
-      
-      <ul key={selectedSeason}>
+
+      <ul>
         {sortedRaces.length > 0 ? sortedRaces.map(race => (
           <li key={race.id}>
-            <div onClick={() => handleRaceSelect(race.id)}>
-              {formatDate(race.race_start_date)} - {race.race_name}
-              {race.stages && race.stages.length > 0 && ` (${race.stages.length} Stages)`}
+            <div>
+              {/* Modified to use a button for accessibility and semantic correctness */}
+              <button onClick={() => handleRaceSelect(race.id)} style={{ background: 'none', border: 'none', padding: 0, margin: 0, textAlign: 'left' }}>
+                <span>{expandedRaces.includes(race.id) ? '▼ ' : '► '}</span>
+                {formatDate(race.race_start_date)} - {race.race_name}
+                {race.stages && race.stages.length > 0 && ` (${race.stages.length} Stages)`}
+              </button>
             </div>
-            {race.stages && (
+            {expandedRaces.includes(race.id) && (
               <ul>
-                {race.stages.map(stage => (
-                  <li key={stage.id}>{stage.name}</li>
+                {race.stages && race.stages.map(stage => (
+                  <li key={stage.id} onClick={(e) => {
+                    e.stopPropagation(); // Prevent the race selection when clicking on a stage
+                    //handleStageSelect(stage.id);
+                  }}>{stage.name}</li>
                 ))}
               </ul>
             )}
@@ -82,6 +69,7 @@ function RaceList() {
       </ul>
     </div>
   );
+
 }
 
 export default RaceList;

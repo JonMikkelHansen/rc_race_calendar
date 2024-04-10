@@ -3,17 +3,71 @@ import { fetchRaces, fetchRacesForSeasons } from '../../components/api';
 import { v4 as uuidv4 } from 'uuid';
 import { interpolateTrackpointData } from '../../Utilities'; // Adjust the path as necessary
 
+
+
+/*************************************
+    SELECTING SEASON, RACE AND STAGE
+*************************************/
+
 export const FETCH_RACES_SUCCESS = 'FETCH_RACES_SUCCESS';
 export const SET_SEASONS = 'SET_SEASONS'; // New action type for setting seasons
 export const SELECT_RACE = 'SELECT_RACE';
 export const SELECT_STAGE = 'SELECT_STAGE';
 
-// Existing action types and creators
+export const fetchRacesAsync = (season) => async (dispatch) => {
+  try {
+    const races = await fetchRaces(season); // Ensure fetchRaces is implemented correctly
+    dispatch({ type: FETCH_RACES_SUCCESS, payload: races });
+  } catch (error) {
+    console.error("Error fetching races:", error);
+    // Potential place for dispatching an error action
+  }
+};
+
+// Action creator for selecting a race
+export const selectRace = (raceId) => ({
+  type: SELECT_RACE,
+  payload: raceId,
+});
+
+// Action creator for selecting a stage
+export const selectStage = (stageId) => ({
+  type: SELECT_STAGE,
+  payload: stageId,
+});
+
+/*************************************
+    SETTING VARIABLES FOR CHART DATA
+*************************************/
+
+export const SET_STAGE_TITLE = 'SET_STAGE_TITLE'; // New action type
+export const setStageTitle = (title) => ({
+  type: SET_STAGE_TITLE,
+  payload: title,
+});
 
 export const SET_TOLERANCE = 'SET_TOLERANCE';
 export const setTolerance = (tolerance) => ({
   type: SET_TOLERANCE,
   payload: tolerance,
+});
+
+export const SET_SHOW_TRACKPOINTS = 'SET_SHOW_TRACKPOINTS';
+export const setShowTrackpoints = (show) => ({
+  type: SET_SHOW_TRACKPOINTS,
+  payload: show,
+});
+
+export const SET_SHOW_WAYPOINTS = 'SET_SHOW_WAYPOINTS';
+export const setShowWaypoints = (show) => ({
+  type: SET_SHOW_WAYPOINTS,
+  payload: show,
+});
+
+export const SET_SHOW_ANNOTATIONS = 'SET_SHOW_ANNOTATIONS';
+export const setShowAnnotations = (show) => ({
+  type: SET_SHOW_ANNOTATIONS,
+  payload: show,
 });
 
 export const SET_TENSION = 'SET_TENSION';
@@ -34,6 +88,10 @@ export const setMaxY = (maxY) => ({
   payload: maxY,
 });
 
+/*****************************
+  CREATING GEOJSON OBJECTS
+******************************/
+
 // CREATING TRACKPOINT GEOJSON OBJECT
 export const SET_TRACKPOINT_GEOJSON = 'SET_TRACKPOINT_GEOJSON';
 export const setTrackpointGeoJSON = (geojson) => ({
@@ -48,7 +106,10 @@ export const setWaypointGeoJSON = (geojson) => ({
   payload: geojson,
 });
 
-// CREATING TRACKPOINTS
+
+/*************************************
+  CREATING TRACKPOINTS AND WAYPOINTS
+*************************************/
 
 export const SET_TRACKPOINTS = 'SET_TRACKPOINTS';
 export const setTrackpoints = (trackpoints) => ({
@@ -152,8 +213,16 @@ export const addWaypointAndTrackpoint = (waypointData) => {
       type: ADD_TRACKPOINT,
       payload: newTrackpoint,
     });
+
+    //const updatedWaypoints = [...waypoints, newWaypoint];
+    //const newWaypointGeoJSON = createWaypointGeoJSON(updatedWaypoints); // Assuming createWaypointGeoJSON is a function you have that generates GeoJSON from waypoints
   };
 };
+
+
+/*************************************
+  CREATING AND EDITING SEGMENTS
+*************************************/
 
 export const ADD_SEGMENT = 'ADD_SEGMENT';
 export const addSegment = ({ name, startDistance, endDistance }) => {
@@ -209,66 +278,4 @@ export const DELETE_SEGMENT = 'DELETE_SEGMENT';
 export const deleteSegment = (segmentId) => ({
   type: DELETE_SEGMENT,
   payload: segmentId,
-});
-
-
-export const SET_SHOW_TRACKPOINTS = 'SET_SHOW_TRACKPOINTS';
-export const setShowTrackpoints = (show) => ({
-  type: SET_SHOW_TRACKPOINTS,
-  payload: show,
-});
-
-export const SET_SHOW_WAYPOINTS = 'SET_SHOW_WAYPOINTS';
-export const setShowWaypoints = (show) => ({
-  type: SET_SHOW_WAYPOINTS,
-  payload: show,
-});
-
-export const SET_SHOW_ANNOTATIONS = 'SET_SHOW_ANNOTATIONS';
-export const setShowAnnotations = (show) => ({
-  type: SET_SHOW_ANNOTATIONS,
-  payload: show,
-});
-
-
-export const SET_STAGE_TITLE = 'SET_STAGE_TITLE'; // New action type
-export const setStageTitle = (title) => ({
-  type: SET_STAGE_TITLE,
-  payload: title,
-});
-
-
-
-// Async action creator for fetching races
-export const fetchRacesAsync = (season) => async (dispatch) => {
-  try {
-    const races = await fetchRaces(season); // Make sure this call uses the season parameter correctly
-    dispatch({ type: FETCH_RACES_SUCCESS, payload: races });
-  } catch (error) {
-    console.error("Error fetching races:", error);
-    // Potentially dispatch an error action here
-  }
-};
-
-// New action creator for fetching all seasons
-export const fetchAllSeasons = () => async (dispatch) => {
-  try {
-    const races = await fetchRacesForSeasons();
-    const seasons = Array.from(new Set(races.map(race => race.season))).sort((a, b) => a - b);
-    dispatch({ type: SET_SEASONS, payload: seasons });
-  } catch (error) {
-    console.error("Error fetching all seasons:", error);
-    // Handle error
-  }
-};
-
-// Action creators for selecting a race and a stage
-export const selectRace = (raceId) => ({
-  type: SELECT_RACE,
-  payload: raceId,
-});
-
-export const selectStage = (stageId) => ({
-  type: SELECT_STAGE,
-  payload: stageId,
 });
