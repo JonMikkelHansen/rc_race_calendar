@@ -7,19 +7,42 @@ const GPXSave = () => {
   const waypoints = useSelector(state => state.waypoints);
   const segments = useSelector(state => state.segments);
 
-  const handleSave = () => {
+  /* *********************
+    HANDLE SAVE FUNCTIONS
+  ********************* */
+  const handleSaveGPX = () => {
     try {
       if (!trackpoints || trackpoints.length === 0) {
         throw new Error('No trackpoints available to save.');
       }
       const xmlString = generateGPXString(trackpoints, waypoints, stageTitle);
-      downloadGPX(xmlString);
+      downloadFile(xmlString, 'trackpoints.gpx', 'application/gpx+xml');
     } catch (error) {
       console.error('Error saving GPX data:', error);
       // Error handling logic
     }
   };
 
+  const handleSaveGeoJSONTrackpoints = () => {
+    const geoJsonString = generateGeoJSONString(trackpoints, null, stageTitle);
+    downloadFile(geoJsonString, 'trackpoints.geojson', 'application/geo+json');
+  };
+
+  const handleSaveGeoJSONWaypoints = () => {
+    const geoJsonString = generateGeoJSONString(null, waypoints, stageTitle);
+    downloadFile(geoJsonString, 'waypoints.geojson', 'application/geo+json');
+  };
+
+  const handleSaveGeoJSONCombined = () => {
+    const geoJsonString = generateGeoJSONString(trackpoints, waypoints, stageTitle);
+    downloadFile(geoJsonString, 'combined.geojson', 'application/geo+json');
+  };
+
+
+  /* ********************* 
+    GENERATE THE STRINGS
+  ********************* */
+  
   const generateGPXString = (trackpoints, waypoints, stageTitle) => {
     // Generate GPX XML string using the trackpoints and waypoints
     let gpxXML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -76,13 +99,66 @@ const GPXSave = () => {
     return gpxXML;
   };
 
-  const downloadGPX = (xmlString) => {
-    const blob = new Blob([xmlString], { type: 'application/gpx+xml' });
+  const generateGeoJSONString = (trackpoints, waypoints, stageTitle) => {
+    let features = [];
+
+    if (trackpoints && trackpoints.length > 0) {
+      const trackFeature = {
+        "type": "Feature",
+        "properties": { 
+          "name": stageTitle, 
+          "desc": "Trackpoints" 
+        },
+        "geometry": {
+          "type": "LineString",
+          "coordinates": trackpoints.map(tp => [
+            tp.lon, 
+            tp.lat,
+            tp.elevation // Including elevation as the third element in the coordinate array
+          ])
+        }
+      };
+      features.push(trackFeature);
+    }
+
+    if (waypoints && waypoints.length > 0) {
+      waypoints.forEach((waypoint, index) => {
+        const waypointFeature = {
+          "type": "Feature",
+          "properties": {
+            "name": waypoint.name,
+            "desc": waypoint.description || '',
+            "ele": waypoint.elevation || 0,
+            "distanceFromStart": waypoint.distanceFromStart || 0
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [waypoint.lon, waypoint.lat]
+          }
+        };
+        features.push(waypointFeature);
+      });
+    }
+
+    const geoJson = {
+      "type": "FeatureCollection",
+      "features": features
+    };
+
+    return JSON.stringify(geoJson, null, 2); // Pretty print JSON
+  };
+
+  /* *********************
+    DOWNLOAD FUNCTIONS 
+  ********************* */
+
+  const downloadFile = (content, filename, type) => {
+    const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'trackpoints.gpx';
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
 
@@ -90,9 +166,18 @@ const GPXSave = () => {
     document.body.removeChild(a);
   };
 
+  /* *********************
+    RENDER COMPONENT
+  ********************* */
+
   return (
     <div>
-      <button onClick={handleSave}>Save GPX</button>
+      <h2>GPX Data</h2>
+      <button onClick={handleSaveGPX}>Save GPX</button>  
+      <h2>GeoJSON Data</h2>
+      <button onClick={handleSaveGeoJSONTrackpoints}>Save GeoJSON - Trackpoints</button>
+      <button onClick={handleSaveGeoJSONWaypoints}>Save GeoJSON - Waypoints</button>
+      <button onClick={handleSaveGeoJSONCombined}>Save GeoJSON - Combined</button>
     </div>
   );
 };

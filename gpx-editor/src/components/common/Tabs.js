@@ -29,6 +29,7 @@ const Tabs = ({ activeTab, setActiveTab }) => {
   return (
     <TabsContainer>
       <Tab isActive={activeTab === 'Race'} onClick={() => setActiveTab('Race')}>Race</Tab>
+      <Tab isActive={activeTab === 'Stage'} onClick={() => setActiveTab('Stage')}>Stage</Tab>
       <Tab isActive={activeTab === 'GPX'} onClick={() => setActiveTab('GPX')}>GPX</Tab>
       <Tab isActive={activeTab === 'Meta'} onClick={() => setActiveTab('Meta')}>Meta</Tab>
       <Tab isActive={activeTab === 'Other'} onClick={() => setActiveTab('Other')}>Other</Tab>

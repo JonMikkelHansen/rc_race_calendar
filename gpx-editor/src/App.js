@@ -30,9 +30,11 @@ function App() {
           {gpxData && (
             <>
               <GPXViz gpxData={gpxData} />
-              <GPXSave />
             </>
           )}
+        </div>
+        <div style={{ display: activeTab === 'Save' ? 'block' : 'none' }}>
+          <GPXSave />
         </div>
       </div>
     </Router>

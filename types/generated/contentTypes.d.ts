@@ -677,32 +677,6 @@ export interface PluginI18NLocale extends Schema.CollectionType {
   };
 }
 
-export interface ApiGpxGpx extends Schema.CollectionType {
-  collectionName: 'gpxes';
-  info: {
-    singularName: 'gpx';
-    pluralName: 'gpxes';
-    displayName: 'GPX';
-    description: '';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    Title: Attribute.String;
-    Description: Attribute.Blocks;
-    GPX: Attribute.Media;
-    stage: Attribute.Relation<'api::gpx.gpx', 'oneToOne', 'api::stage.stage'>;
-    createdAt: Attribute.DateTime;
-    updatedAt: Attribute.DateTime;
-    publishedAt: Attribute.DateTime;
-    createdBy: Attribute.Relation<'api::gpx.gpx', 'oneToOne', 'admin::user'> &
-      Attribute.Private;
-    updatedBy: Attribute.Relation<'api::gpx.gpx', 'oneToOne', 'admin::user'> &
-      Attribute.Private;
-  };
-}
-
 export interface ApiRaceRace extends Schema.CollectionType {
   collectionName: 'races';
   info: {
@@ -941,6 +915,11 @@ export interface ApiRaceRace extends Schema.CollectionType {
     Winner: Attribute.String;
     Winning_team: Attribute.String;
     PCS_id: Attribute.BigInteger;
+    stages: Attribute.Relation<
+      'api::race.race',
+      'oneToMany',
+      'api::stage.stage'
+    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1000,7 +979,7 @@ export interface ApiStageStage extends Schema.CollectionType {
     draftAndPublish: true;
   };
   attributes: {
-    race: Attribute.Relation<'api::stage.stage', 'oneToOne', 'api::race.race'>;
+    race: Attribute.Relation<'api::stage.stage', 'manyToOne', 'api::race.race'>;
     stage_date: Attribute.DateTime & Attribute.Required;
     stage_title: Attribute.String;
     stage_description_short: Attribute.Blocks;
@@ -1039,9 +1018,14 @@ export interface ApiStageStage extends Schema.CollectionType {
     generated_images: Attribute.Media;
     generated_videos: Attribute.Media;
     external_link: Attribute.String;
-    gpx: Attribute.Relation<'api::stage.stage', 'oneToOne', 'api::gpx.gpx'>;
     Winner: Attribute.String;
     Winning_team: Attribute.String;
+    GeoJSON_trackpoints: Attribute.JSON;
+    GeoJSON_waypoints: Attribute.JSON;
+    GeoJSON_combined: Attribute.JSON;
+    GPX_file: Attribute.Media;
+    AltitudeGain: Attribute.BigInteger;
+    PCS_id: Attribute.BigInteger;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1076,7 +1060,6 @@ declare module '@strapi/types' {
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
       'plugin::i18n.locale': PluginI18NLocale;
-      'api::gpx.gpx': ApiGpxGpx;
       'api::race.race': ApiRaceRace;
       'api::series.series': ApiSeriesSeries;
       'api::stage.stage': ApiStageStage;

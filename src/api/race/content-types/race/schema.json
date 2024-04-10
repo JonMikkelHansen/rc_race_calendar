@@ -262,6 +262,12 @@
     },
     "PCS_id": {
       "type": "biginteger"
+    },
+    "stages": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::stage.stage",
+      "mappedBy": "race"
     }
   }
 }

@@ -14,8 +14,9 @@
   "attributes": {
     "race": {
       "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::race.race"
+      "relation": "manyToOne",
+      "target": "api::race.race",
+      "inversedBy": "stages"
     },
     "stage_date": {
       "type": "datetime",
@@ -148,17 +149,34 @@
     "external_link": {
       "type": "string"
     },
-    "gpx": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::gpx.gpx",
-      "mappedBy": "stage"
-    },
     "Winner": {
       "type": "string"
     },
     "Winning_team": {
       "type": "string"
+    },
+    "GeoJSON_trackpoints": {
+      "type": "json"
+    },
+    "GeoJSON_waypoints": {
+      "type": "json"
+    },
+    "GeoJSON_combined": {
+      "type": "json"
+    },
+    "GPX_file": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "files"
+      ]
+    },
+    "AltitudeGain": {
+      "type": "biginteger"
+    },
+    "PCS_id": {
+      "type": "biginteger"
     }
   }
 }
