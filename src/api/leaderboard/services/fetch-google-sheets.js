@@ -1,4 +1,3 @@
-// Import Google API Client Library using CommonJS syntax
 const { google } = require('googleapis');
 
 async function fetchGoogleSheetData(entry, { strapi }) {
@@ -8,7 +7,6 @@ async function fetchGoogleSheetData(entry, { strapi }) {
     process.env.GOOGLE_REDIRECT_URI
   );
 
-  // Set credentials with access and refresh tokens
   auth.setCredentials({
     access_token: process.env.GOOGLE_ACCESS_TOKEN,
     refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
@@ -16,8 +14,8 @@ async function fetchGoogleSheetData(entry, { strapi }) {
   });
 
   const sheets = google.sheets({ version: 'v4', auth });
-  const spreadsheetId = '159lVwa87KSC_l3THeskccDBXL08mHO2n22XMKPTFeHQ'; // Your actual Spreadsheet ID
-  const range = 'Total Standings!A1:C8000';  // Corrected to the actual sheet name
+  const spreadsheetId = '159lVwa87KSC_l3THeskccDBXL08mHO2n22XMKPTFeHQ';
+  const range = 'Total Standings!A1:C8000';
 
   try {
     const response = await sheets.spreadsheets.values.get({
@@ -25,21 +23,29 @@ async function fetchGoogleSheetData(entry, { strapi }) {
       range,
     });
 
-    // Map the data to match the 'standings' structure expected by Strapi
+    if (!response.data.values) {
+      console.error('No data found in the sheet');
+      return;
+    }
+
     const standings = response.data.values.map(([name, team, points]) => ({
       name, 
       team, 
-      points: parseInt(points, 10) // Ensuring points are stored as integers
+      points: parseInt(points, 10) // Ensure points are numeric
     }));
 
-    // Update the 'standings' field of the leaderboard entry in Strapi
-    await strapi.entityService.update('api::leaderboard.leaderboard', entry.id, {
+    console.log('Standings fetched:', standings);
+
+    // Update the 'standings' field of the leaderboard entry
+    const updateResponse = await strapi.entityService.update('api::leaderboard.leaderboard', entry.id, {
       data: {
         standings
       },
     });
+
+    console.log('Update response:', updateResponse);
   } catch (error) {
-    console.error('Error fetching data from Google Sheets:', error);
+    console.error('Error fetching or updating data:', error);
   }
 }
 
