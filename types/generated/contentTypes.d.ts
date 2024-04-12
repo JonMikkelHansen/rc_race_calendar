@@ -683,12 +683,14 @@ export interface ApiLeaderboardLeaderboard extends Schema.CollectionType {
     singularName: 'leaderboard';
     pluralName: 'leaderboards';
     displayName: 'Leaderboard';
+    description: '';
   };
   options: {
     draftAndPublish: false;
   };
   attributes: {
     standings: Attribute.JSON;
+    Title: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     createdBy: Attribute.Relation<

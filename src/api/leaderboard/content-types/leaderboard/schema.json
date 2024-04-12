@@ -4,7 +4,8 @@
   "info": {
     "singularName": "leaderboard",
     "pluralName": "leaderboards",
-    "displayName": "Leaderboard"
+    "displayName": "Leaderboard",
+    "description": ""
   },
   "options": {
     "draftAndPublish": false
@@ -13,6 +14,9 @@
   "attributes": {
     "standings": {
       "type": "json"
+    },
+    "Title": {
+      "type": "string"
     }
   }
 }
