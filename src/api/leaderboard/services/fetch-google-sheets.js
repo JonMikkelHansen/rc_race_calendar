@@ -28,12 +28,18 @@ async function fetchGoogleSheetData(entry, { strapi }) {
       return;
     }
 
-    const standings = response.data.values.map(([name, team, points]) => ({
+    /*const standings = response.data.values.map(([name, team, points]) => ({
       name, 
       team, 
       points: parseInt(points, 10) // Ensure points are numeric
-    }));
+    }));*/
 
+    const standings = [
+      { name: "Test Player", team: "Test Team", points: 100 },
+      { name: "Another Player", team: "Another Team", points: 200 }
+  ];
+
+  
     console.log('Standings fetched:', standings);
 
     // Update the 'standings' field of the leaderboard entry
