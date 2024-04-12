@@ -2,7 +2,22 @@
 
 module.exports = {
   routes: [
-    // ... your other route configurations for 'api::stage.stage'
+    {
+      method: 'GET',
+      path: '/stages',
+      handler: 'stage.find',
+      config: {
+        auth: false,
+      },
+    },
+    {
+      method: 'GET',
+      path: '/stages/:id',
+      handler: 'stage.findOne',
+      config: {
+        auth: false,
+      },
+    },
     
     // Custom routes for GeoJSON data
     {

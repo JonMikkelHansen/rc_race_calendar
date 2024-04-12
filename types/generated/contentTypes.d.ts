@@ -677,6 +677,35 @@ export interface PluginI18NLocale extends Schema.CollectionType {
   };
 }
 
+export interface ApiLeaderboardLeaderboard extends Schema.CollectionType {
+  collectionName: 'leaderboards';
+  info: {
+    singularName: 'leaderboard';
+    pluralName: 'leaderboards';
+    displayName: 'Leaderboard';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    standings: Attribute.JSON;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::leaderboard.leaderboard',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::leaderboard.leaderboard',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiRaceRace extends Schema.CollectionType {
   collectionName: 'races';
   info: {
@@ -979,7 +1008,6 @@ export interface ApiStageStage extends Schema.CollectionType {
     draftAndPublish: true;
   };
   attributes: {
-    race: Attribute.Relation<'api::stage.stage', 'manyToOne', 'api::race.race'>;
     stage_date: Attribute.DateTime & Attribute.Required;
     stage_title: Attribute.String;
     stage_description_short: Attribute.Blocks;
@@ -1026,6 +1054,7 @@ export interface ApiStageStage extends Schema.CollectionType {
     GPX_file: Attribute.Media;
     AltitudeGain: Attribute.BigInteger;
     PCS_id: Attribute.BigInteger;
+    race: Attribute.Relation<'api::stage.stage', 'manyToOne', 'api::race.race'>;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1060,6 +1089,7 @@ declare module '@strapi/types' {
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
       'plugin::i18n.locale': PluginI18NLocale;
+      'api::leaderboard.leaderboard': ApiLeaderboardLeaderboard;
       'api::race.race': ApiRaceRace;
       'api::series.series': ApiSeriesSeries;
       'api::stage.stage': ApiStageStage;
