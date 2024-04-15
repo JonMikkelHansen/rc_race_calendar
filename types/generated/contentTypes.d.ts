@@ -677,6 +677,38 @@ export interface PluginI18NLocale extends Schema.CollectionType {
   };
 }
 
+export interface ApiLeaderboardLeaderboard extends Schema.CollectionType {
+  collectionName: 'leaderboards';
+  info: {
+    singularName: 'leaderboard';
+    pluralName: 'leaderboards';
+    displayName: 'Leaderboard';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Title: Attribute.String;
+    standings: Attribute.JSON;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::leaderboard.leaderboard',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::leaderboard.leaderboard',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiRaceRace extends Schema.CollectionType {
   collectionName: 'races';
   info: {
@@ -1060,6 +1092,7 @@ declare module '@strapi/types' {
       'plugin::users-permissions.role': PluginUsersPermissionsRole;
       'plugin::users-permissions.user': PluginUsersPermissionsUser;
       'plugin::i18n.locale': PluginI18NLocale;
+      'api::leaderboard.leaderboard': ApiLeaderboardLeaderboard;
       'api::race.race': ApiRaceRace;
       'api::series.series': ApiSeriesSeries;
       'api::stage.stage': ApiStageStage;
