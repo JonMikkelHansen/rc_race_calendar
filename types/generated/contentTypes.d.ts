@@ -947,11 +947,6 @@ export interface ApiRaceRace extends Schema.CollectionType {
     Winner: Attribute.String;
     Winning_team: Attribute.String;
     PCS_id: Attribute.BigInteger;
-    stages: Attribute.Relation<
-      'api::race.race',
-      'oneToMany',
-      'api::stage.stage'
-    >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -1011,7 +1006,7 @@ export interface ApiStageStage extends Schema.CollectionType {
     draftAndPublish: true;
   };
   attributes: {
-    race: Attribute.Relation<'api::stage.stage', 'manyToOne', 'api::race.race'>;
+    race: Attribute.Relation<'api::stage.stage', 'oneToOne', 'api::race.race'>;
     stage_date: Attribute.DateTime & Attribute.Required;
     stage_title: Attribute.String;
     stage_description_short: Attribute.Blocks;
@@ -1050,14 +1045,9 @@ export interface ApiStageStage extends Schema.CollectionType {
     generated_images: Attribute.Media;
     generated_videos: Attribute.Media;
     external_link: Attribute.String;
+    gpx: Attribute.Relation<'api::stage.stage', 'oneToOne', 'api::gpx.gpx'>;
     Winner: Attribute.String;
     Winning_team: Attribute.String;
-    GeoJSON_trackpoints: Attribute.JSON;
-    GeoJSON_waypoints: Attribute.JSON;
-    GeoJSON_combined: Attribute.JSON;
-    GPX_file: Attribute.Media;
-    AltitudeGain: Attribute.BigInteger;
-    PCS_id: Attribute.BigInteger;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;

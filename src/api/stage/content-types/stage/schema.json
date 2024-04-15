@@ -12,12 +12,6 @@
   },
   "pluginOptions": {},
   "attributes": {
-    "race": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::race.race",
-      "inversedBy": "stages"
-    },
     "stage_date": {
       "type": "datetime",
       "required": true
@@ -177,6 +171,12 @@
     },
     "PCS_id": {
       "type": "biginteger"
+    },
+    "race": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::race.race",
+      "inversedBy": "stages"
     }
   }
 }
