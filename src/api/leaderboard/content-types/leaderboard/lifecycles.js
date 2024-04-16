@@ -13,8 +13,8 @@ module.exports = {
       console.error("Failed to fetch data from Google Sheets, using dummy data instead:", error);
       // Fallback dummy data
       standingsData = [
-        { name: "John Doe", team: "Team Alpha", points: 100 },
-        { name: "Jane Smith", team: "Team Beta", points: 150 }
+        { name: "Admin Jensen", team: "Team Immortal", points: 150 },
+        { name: "Dummy D", team: "Team Beta", points: 100 }
       ];
     }
 
