@@ -2,7 +2,7 @@ module.exports = {
     routes: [
       {
         method: 'GET',
-        path: '/api/auth/google',
+        path: '/auth/google',
         handler: 'auth.redirectToGoogle',
         config: { auth: false },
       },
