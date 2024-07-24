@@ -3,9 +3,9 @@ import {
   SET_MINY, SET_MAXY, SET_TOLERANCE, SET_TENSION, 
   SET_TRACKPOINTS, ADD_TRACKPOINT, UPDATE_TRACKPOINT, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT, SET_TRACKPOINT_GEOJSON, SET_WAYPOINT_GEOJSON, ADD_SEGMENT, EDIT_SEGMENT, DELETE_SEGMENT,
   SET_SHOW_TRACKPOINTS, SET_SHOW_WAYPOINTS, SET_SHOW_ANNOTATIONS,
-  SET_STAGE_TITLE // Import the new action type
+  SET_STAGE_TITLE, // Import the new action type
+  SET_MINY_MANUAL, SET_MAXY_MANUAL, RESET_MINY_MAXY_MANUAL // Import newly added action types
 } from '../actions/GPXActions';
-
 
 const initialState = {
   races: [],
@@ -23,7 +23,9 @@ const initialState = {
   showTrackpoints: false,
   showWaypoints: true,
   showAnnotations: false,
-  stageTitle: '', // Initialize stageTitle as an empty string  
+  stageTitle: '', // Initialize stageTitle as an empty string
+  minYManual: null,
+  maxYManual: null,
 };
 
 const GPXReducer = (state = initialState, action) => {
@@ -38,6 +40,12 @@ const GPXReducer = (state = initialState, action) => {
       return { ...state, minY: action.payload };
     case SET_MAXY:
       return { ...state, maxY: action.payload };
+    case SET_MINY_MANUAL:
+      return { ...state, minYManual: action.payload, minY: action.payload };
+    case SET_MAXY_MANUAL:
+      return { ...state, maxYManual: action.payload, maxY: action.payload };
+    case RESET_MINY_MAXY_MANUAL:
+      return { ...state, minYManual: null, maxYManual: null };
     case SET_TOLERANCE:
       return { ...state, tolerance: action.payload };
     case SET_TENSION:
@@ -46,21 +54,11 @@ const GPXReducer = (state = initialState, action) => {
       return { ...state, trackpoints: action.payload };
     case ADD_TRACKPOINT:
       const newTrackpointsWithAdded = [...state.trackpoints, action.payload];
-
-      // Sort the array based on distanceFromStart
       const sortedTrackpointsWithAdded = newTrackpointsWithAdded.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
-    
-      // Return the new state with the updated trackpoints array
       return { ...state, trackpoints: sortedTrackpointsWithAdded };
     case 'UPDATE_TRACKPOINT': {
-        const updatedTrackpoints = state.trackpoints.map(tp => 
-          tp.id === action.payload.id ? action.payload : tp
-        );
-      
-        return {
-          ...state,
-          trackpoints: updatedTrackpoints,
-        };
+      const updatedTrackpoints = state.trackpoints.map(tp => tp.id === action.payload.id ? action.payload : tp);
+      return { ...state, trackpoints: updatedTrackpoints };
     }
     case SET_WAYPOINTS:
       return { ...state, waypoints: action.payload };
@@ -73,25 +71,14 @@ const GPXReducer = (state = initialState, action) => {
     case SET_TRACKPOINT_GEOJSON:
       return { ...state, trackpointGeoJSON: action.payload };
     case SET_WAYPOINT_GEOJSON:
-      return { ...state, waypointGeoJSON: action.payload};      
+      return { ...state, waypointGeoJSON: action.payload };
     case ADD_SEGMENT:
-      return {
-        ...state,
-        segments: [...state.segments, action.payload],
-      };
+      return { ...state, segments: [...state.segments, action.payload] };
     case EDIT_SEGMENT:
-      const updatedSegments = state.segments.map(segment =>
-        segment.id === action.payload.segmentId ? { ...segment, ...action.payload.updatedSegment } : segment
-      );
-      return {
-        ...state,
-        segments: updatedSegments,
-      };
+      const updatedSegments = state.segments.map(segment => segment.id === action.payload.segmentId ? { ...segment, ...action.payload.updatedSegment } : segment);
+      return { ...state, segments: updatedSegments };
     case DELETE_SEGMENT:
-      return {
-        ...state,
-        segments: state.segments.filter(segment => segment.id !== action.payload),
-      };
+      return { ...state, segments: state.segments.filter(segment => segment.id !== action.payload) };
     case SET_SHOW_TRACKPOINTS:
       return { ...state, showTrackpoints: action.payload };
     case SET_SHOW_WAYPOINTS:

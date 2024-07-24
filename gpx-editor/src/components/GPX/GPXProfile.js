@@ -5,6 +5,7 @@ import { douglasPeucker } from '../../Utilities'; // Adjust the path as necessar
 import { setMinY, setMaxY, setTolerance, setTension, setShowTrackpoints, setShowWaypoints, setShowAnnotations  } from '../../redux/actions/GPXActions'; // Adjust the path as necessary
 import { Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
+import GPXChartControls from './GPXChartControls.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 
 //REGISTERS
@@ -146,58 +147,9 @@ const GPXProfile = () => {
     return (
         <div>
         <Line data={data} options={options} />
+        
         <div>
-            <input
-                type="checkbox"
-                checked={showTrackpoints}
-                onChange={handleCheckboxChange(setShowTrackpoints)}
-            /> Show Trackpoints
-            <input
-                type="checkbox"
-                checked={showWaypoints}
-                onChange={handleCheckboxChange(setShowWaypoints)}
-                style={{ marginLeft: '10px' }}
-            /> Show Waypoints
-            <input
-                type="checkbox"
-                checked={showAnnotations}
-                onChange={handleCheckboxChange(setShowAnnotations)}
-                style={{ marginLeft: '10px' }}
-            /> Show Annotations
-        </div>
-        <div style={{ marginTop: '10px' }}>
-            Tolerance: 
-            <input
-                type="number"
-                value={reduxTolerance || 100}
-                onChange={handleInputChange(setTolerance)}
-                style={{ marginLeft: '5px' }}
-            />
-            Tension: 
-            <input
-                type="number"
-                value={reduxTension || 0}
-                onChange={handleInputChange(setTension)}
-                step="0.1"
-                min="0"
-                max="1"
-                style={{ marginLeft: '10px' }}
-            />
-            Min Y: 
-            <input
-                type="number"
-                value={reduxMinY}
-                onChange={handleInputChange(setMinY)}
-                step="50"
-                style={{ marginLeft: '10px' }}
-            />
-            Max Y: <input
-                type="number"
-                value={reduxMaxY}
-                onChange={handleInputChange(setMaxY)}
-                step="50"
-                style={{ marginLeft: '10px' }}
-            />
+           <GPXChartControls />
         </div>
     </div>
     );

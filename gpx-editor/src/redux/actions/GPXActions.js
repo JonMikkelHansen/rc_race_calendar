@@ -88,6 +88,23 @@ export const setMaxY = (maxY) => ({
   payload: maxY,
 });
 
+export const SET_MINY_MANUAL = 'SET_MINY_MANUAL';
+export const setMinYManual = (minY) => ({
+  type: SET_MINY_MANUAL,
+  payload: minY,
+});
+
+export const SET_MAXY_MANUAL = 'SET_MAXY_MANUAL';
+export const setMaxYManual = (maxY) => ({
+  type: SET_MAXY_MANUAL,
+  payload: maxY,
+});
+
+export const RESET_MINY_MAXY_MANUAL = 'RESET_MINY_MAXY_MANUAL';
+export const resetMinYMaxYManual = () => ({
+  type: RESET_MINY_MAXY_MANUAL,
+});
+
 /*****************************
   CREATING GEOJSON OBJECTS
 ******************************/

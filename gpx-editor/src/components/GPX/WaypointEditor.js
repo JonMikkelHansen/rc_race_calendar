@@ -1,12 +1,13 @@
+// WaypointEditor.js
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateWaypoint, deleteWaypoint, addWaypoint, addWaypointAndTrackpoint } from '../../redux/actions/GPXActions';
+import { updateWaypoint, deleteWaypoint, addWaypointAndTrackpoint, setMinYManual, setMaxYManual } from '../../redux/actions/GPXActions';
 import { interpolateTrackpointData } from '../../Utilities'; // Adjust the path as necessary
 
 import styled from 'styled-components';
 
-
+// Styled components for the UI
 const EditorContainer = styled.div`
   width: 90%;
   padding: 20px;
@@ -16,62 +17,59 @@ const EditorContainer = styled.div`
 `;
 
 const EditForm = styled.form`
-  display: block; /* Changed from flex to block */
+  display: block;
   padding: 10px;
   border-radius: 5px;
   transition: max-height 0.3s ease-out;
   overflow: hidden;
-  background-color: transparent; /* Removed background color */
-  position: relative; /* Positioned relative to place the delete button absolutely */
-  padding-top: 40px; /* Give space for the delete button at the top */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Optional: add shadow for depth */
+  background-color: transparent;
+  position: relative;
+  padding-top: 40px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 `;
 
 const WaypointInfo = styled.div`
-  justifyContent: space-between; 
+  justify-content: space-between; 
   alignItems: center;
   width: 100%;
-  display: ${props => props.isActive ? 'none' : 'flex'}; // Use props to toggle height
-`;  
+  display: ${props => props.isActive ? 'none' : 'flex'};
+`;
 
 const StyledForm = styled.form`
 display: grid;
-grid-template-columns: repeat(5, 1fr); /* Four columns of equal width */
-grid-gap: 10px; /* Spacing between grid items */
-align-items: top; /* Align items vertically */
+grid-template-columns: repeat(5, 1fr);
+grid-gap: 10px;
+align-items: top;
 width: 100%;
 margin: 1em 2em 1em .1em;
 
-/* Adjust the size of specific grid items if necessary */
 .full-width {
-  grid-column: 1 / -1; /* Makes the item take up the whole width */
+  grid-column: 1 / -1;
 }
 
-.span-2 { /* Class to make an item span two columns */
-    grid-column: span 2;
-  }
+.span-2 {
+  grid-column: span 2;
+}
 
-.span-3 { /* Class to make an item span three columns */
+.span-3 {
   grid-column: span 3;
 }
 
-.span-4 { /* Class to make an item span all four columns */
+.span-4 {
   grid-column: span 4;
 }
 
 .span-down-3 {
-  grid-row: span 3; /* Makes the item span two rows */
+  grid-row: span 3;
 }
 
-/* Style for labels to align with the inputs */
 label {
   display: block;
   margin-bottom: 5px;
 }
 
-/* Optional: Style for the input and textarea elements */
 input, textarea, select {
-  width: 92%; /* Make input fields take up the full width of their grid column */
+  width: 92%;
   padding: 0.5em;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -81,11 +79,11 @@ select{
   width: 100%;
 }
 
-/* Button styling */
 button {
-  justify-self: start; /* Align buttons to the start of their grid column */
+  justify-self: start;
 }
-  max-height: ${props => props.isActive ? '500px' : '0'}; // Use props to toggle height
+
+max-height: ${props => props.isActive ? '500px' : '0'};
 `;
 
 const FormInput = styled.input`
@@ -95,7 +93,7 @@ const FormInput = styled.input`
 `;
 
 const FormTextarea = styled.textarea`
-  padding: 0.5em
+  padding: 0.5em;
   border: 1px solid #ccc;
   border-radius: 4px;
   min-height: 12em;
@@ -105,28 +103,27 @@ const WaypointList = styled.ul`
   list-style: none;
   margin: 0;
   padding: 0;
-  overflow-y: auto; // Allows scrolling if the list gets too long
-  max-height: 400px; // Adjust based on available space; makes the list scrollable
+  overflow-y: auto;
+  max-height: 400px;
 `;
 
 const WaypointItem = styled.li`
-  background-color: #333; // Darker background for contrast
+  background-color: #333;
   color: #fff;
-  margin: 2px 0; // Reduced margin
-  padding: 5px 10px; // Reduced padding
+  margin: 2px 0;
+  padding: 5px 10px;
   font-family: 'Libre Franklin', sans-serif;
-  font-size: 0.8rem; // Smaller font size
+  font-size: 0.8rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   cursor: pointer;
 
   &:hover {
-    background-color: #444; // Slightly lighter on hover to indicate interactivity
+    background-color: #444;
   }
 `;
 
-// Adjusted buttons for compact styling
 const CreateButton = styled.button`
   padding: 10px 20px;
   border: none;
@@ -163,8 +160,8 @@ const DeleteButton = styled.button`
 `;
 
 const SaveButton = styled.button`
-  background-color: #00ff6a; // Example vibrant color
-  color: #000; // Dark text for contrast
+  background-color: #00ff6a;
+  color: #000;
   font-family: 'Libre Franklin', sans-serif;
   padding: 10px 20px;
   border: none;
@@ -173,322 +170,263 @@ const SaveButton = styled.button`
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #00e65d; // A slightly darker shade for hover state
+    background-color: #00e65d;
   }
 `;
 
+// Main component function
 export const WaypointEditor = () => {
-    const waypoints = useSelector(state => state.waypoints.sort((a, b) => {
-      // Check if both waypoints have a createdAt timestamp
-      if (a.createdAt && b.createdAt) {
-        // Both waypoints have a timestamp, so sort by timestamp descending (newest first)
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      } else if (a.createdAt) {
-        // Only waypoint a has a timestamp, so it should come before b
-        return -1;
-      } else if (b.createdAt) {
-        // Only waypoint b has a timestamp, so a should come before b
-        return 1;
-      }
-      // Neither waypoint has a timestamp, or other sorting logic if needed
-      return a.distanceFromStart - b.distanceFromStart;
-    }));
-    // Correctly fetch trackpoints from the Redux store
-    const trackpoints = useSelector((state: { trackpoints: any }) => state.trackpoints); // Assuming trackpoints are stored in the Redux state under 'trackpoints'
-    const dispatch = useDispatch();
-    const [editWaypointId, setEditWaypointId] = useState(null);
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [elevation, setElevation] = useState(0);
-    const [distance, setDistance] = useState(0); // Distance should remain in the unit it is used in the UI
-    // Calculate maxDistance here to make it accessible throughout the component
-    // Add this new state to keep track of the input value independently
-    const [inputDistance, setInputDistance] = useState(0);
+  const waypoints = useSelector(state => state.waypoints.sort((a, b) => {
+    if (a.createdAt && b.createdAt) {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    } else if (a.createdAt) {
+      return -1;
+    } else if (b.createdAt) {
+      return 1;
+    }
+    return a.distanceFromStart - b.distanceFromStart;
+  }));
+
+  const trackpoints = useSelector((state: { trackpoints: any }) => state.trackpoints);
+  const minYManual = useSelector(state => state.minYManual);
+  const maxYManual = useSelector(state => state.maxYManual);
+  const dispatch = useDispatch();
+
+  const [editWaypointId, setEditWaypointId] = useState(null);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [elevation, setElevation] = useState(0);
+  const [distance, setDistance] = useState(0);
+  const [inputDistance, setInputDistance] = useState(0);
+  const maxDistance = trackpoints[trackpoints.length - 1]?.distanceFromStart || 0;
+  const [type, setType] = useState('');
+  const [secondaryType, setSecondaryType] = useState('');
+  const [elevationEdited, setElevationEdited] = useState(false);
+
+  // Reset secondary type if primary type is not 'Climb'
+  useEffect(() => {
+    if (type !== 'climb') {
+      setSecondaryType('');
+    }
+  }, [type]);
+
+  const logUserCreatedTrackpoints = () => {
+    const userCreatedTrackpoints = trackpoints.filter(tp => tp.userCreated);
+    console.log("User Created Trackpoints:", userCreatedTrackpoints);
+  };
+
+  const findNearestTrackpointElevation = (distance) => {
     const maxDistance = trackpoints[trackpoints.length - 1]?.distanceFromStart || 0;
-    const [type, setType] = useState('');
-    const [elevationEdited, setElevationEdited] = useState(false);
-
-    const logUserCreatedTrackpoints = () => {
-        const userCreatedTrackpoints = trackpoints.filter(tp => tp.userCreated);
-        console.log("User Created Trackpoints:", userCreatedTrackpoints);
-    };
-
-    const findNearestTrackpointElevation = (distance) => {
-        // First, determine the maximum allowed distance from the last trackpoint
-        const maxDistance = trackpoints[trackpoints.length - 1]?.distanceFromStart || 0;
-        
-        // If the given distance is equal to maxDistance, return the elevation of the last trackpoint directly
-        if (distance === maxDistance) {
-            return trackpoints[trackpoints.length - 1].elevation;
-        }
-    
-        // Ensure trackpoints are sorted by distanceFromStart for interpolation
-        const sortedTrackpoints = trackpoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
-    
-        let before = sortedTrackpoints[0];
-        let after = sortedTrackpoints[sortedTrackpoints.length - 1];
-    
-        for (const trackpoint of sortedTrackpoints) {
-            if (trackpoint.distanceFromStart <= distance) {
-                before = trackpoint;
-            }
-            if (trackpoint.distanceFromStart > distance) {
-                after = trackpoint;
-                break; // Found the immediate next trackpoint, exit the loop
-            }
-        }
-    
-        // Interpolate elevation if not exactly at maxDistance
-        const distanceRatio = (distance - before.distanceFromStart) / (after.distanceFromStart - before.distanceFromStart);
-        const elevationDiff = after.elevation - before.elevation;
-        const interpolatedElevation = before.elevation + distanceRatio * elevationDiff;
-    
-        // Ensure the elevation is in meters with max one decimal place
-        return Number(interpolatedElevation.toFixed(1));
-    };
-  
-
-    useEffect(() => {
-        // Only update elevation if in edit or create mode and distance is a number
-        if (editWaypointId !== null && !isNaN(distance)) {
-            const interpolatedElevation = findNearestTrackpointElevation(parseFloat(distance));
-            setElevation(interpolatedElevation);
-        }
-    }, [distance, editWaypointId, trackpoints]); // Ensure trackpoints is included in the dependency array if it could change
-  
-    useEffect(() => {
-      logUserCreatedTrackpoints();
-  }, [trackpoints]); // Assuming trackpoints are a dependency
-  
-
-    const handleEditClick = (waypoint) => {
-      if (editWaypointId !== waypoint.id) {
-        setEditWaypointId(waypoint.id);
-        setName(waypoint.name);
-        setDescription(waypoint.description || '');
-        setElevation(waypoint.elevation || 0);
-        setDistance(waypoint.distanceFromStart); // Keeping the distance as is without converting
-        setType(waypoint.type || "null");
-      }else{
-
+    if (distance === maxDistance) {
+      return trackpoints[trackpoints.length - 1].elevation;
+    }
+    const sortedTrackpoints = trackpoints.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
+    let before = sortedTrackpoints[0];
+    let after = sortedTrackpoints[sortedTrackpoints.length - 1];
+    for (const trackpoint of sortedTrackpoints) {
+      if (trackpoint.distanceFromStart <= distance) {
+        before = trackpoint;
       }
-    };
-
-    const handleDeleteClick = (waypointId) => {
-        const isConfirmed = window.confirm("Are you sure you want to delete this waypoint?");
-        if (isConfirmed) {
-            dispatch(deleteWaypoint(waypointId));
-            if (waypointId === editWaypointId) {
-                resetForm();
-            }
-        }
-    };
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      const finalElevation = elevationEdited ? elevation : findNearestTrackpointElevation(distance);
-      const waypointData = {
-        id: editWaypointId, 
-        name,
-        description,
-        elevation: finalElevation,
-        distanceFromStart: distance,
-        type,
-        elevationEdited,
-      };
-      if(editWaypointId) {
-        dispatch(updateWaypoint(waypointData));
-      } else {
-        dispatch(addWaypointAndTrackpoint(waypointData)); // Make sure this action appropriately handles the elevation too
+      if (trackpoint.distanceFromStart > distance) {
+        after = trackpoint;
+        break;
       }
-      resetForm();
-    };
+    }
+    const distanceRatio = (distance - before.distanceFromStart) / (after.distanceFromStart - before.distanceFromStart);
+    const elevationDiff = after.elevation - before.elevation;
+    const interpolatedElevation = before.elevation + distanceRatio * elevationDiff;
+    return Number(interpolatedElevation.toFixed(1));
+  };
 
-    const resetForm = () => {
-        setEditWaypointId(null);
-        setName('');
-        setDescription('');
-        setElevation(0);
-        setDistance(0);
-        setType('null');
-        setElevationEdited(false); 
-    };
+  useEffect(() => {
+    if (editWaypointId !== null && !isNaN(distance)) {
+      const interpolatedElevation = findNearestTrackpointElevation(parseFloat(distance));
+      setElevation(interpolatedElevation);
+    }
+  }, [distance, editWaypointId, trackpoints]);
 
-    const handleAddClick = () => {
-        // Use UUID to generate a unique ID for the new waypoint
-        console.log("Trackpoints Array Before Interpolation:", trackpoints);
-    
-        // Assuming a distance of 0 for the new waypoint, interpolate the initial trackpoint data
-        const interpolatedData = trackpoints.length > 0 ? interpolateTrackpointData(0, trackpoints) : { lat: 0, lon: 0, elevation: 0 };
-    
-        console.log("Interpolated Trackpoint Data:", interpolatedData); // Debug log
+  useEffect(() => {
+    logUserCreatedTrackpoints();
+  }, [trackpoints]);
 
-        // Prepare the new waypoint data with the interpolated trackpoint data
-        const newWaypoint = {
-            name: '', // Default to an empty name
-            description: '', // Default to an empty description            
-            lat: interpolatedData.lat,
-            lon: interpolatedData.lon,
-            elevation: interpolatedData.elevation,
-            distanceFromStart: 0,
-            createdAt: new Date().toISOString(), // Add a timestamp
-            userCreated: true,
-        };
-        // Dispatch the action to add the new waypoint to the Redux store
-        // Assuming you have an action creator that accepts this waypoint object
-        dispatch(addWaypointAndTrackpoint(newWaypoint));
+  const handleEditClick = (waypoint) => {
+    if (editWaypointId !== waypoint.id) {
+      setEditWaypointId(waypoint.id);
+      setName(waypoint.name);
+      setDescription(waypoint.description || '');
+      setElevation(waypoint.elevation || 0);
+      setDistance(waypoint.distanceFromStart);
+      setType(waypoint.type || "null");
+      setSecondaryType(waypoint.secondaryType || 'null');
+    }
+  };
 
-        // Log to see if the action was dispatched
-        console.log("Dispatched new waypoint:", newWaypoint);
-
-        // Reset form and prepare UI for entering details of the new waypoint
-        setName('');
-        setDescription('');
-        setElevation(interpolatedData.elevation);
-        setDistance(0);
-    };
-
-
-    const handleElevationChange = (e) => {
-      const newElevation = parseFloat(e.target.value);
-      if (!isNaN(newElevation)) {
-        setElevation(newElevation);
-        setElevationEdited(true); // Mark elevation as manually edited
+  const handleDeleteClick = (waypointId) => {
+    const isConfirmed = window.confirm("Are you sure you want to delete this waypoint?");
+    if (isConfirmed) {
+      dispatch(deleteWaypoint(waypointId));
+      if (waypointId === editWaypointId) {
+        resetForm();
       }
-    };
+    }
+  };
 
-    const handleDistanceChange = (e) => {
-      const newValue = e.target.value;
-    
-      // Handle case when input is cleared
-      if (newValue === '') {
-        setInputDistance(''); // Allow the field to be empty, enabling users to clear the input
-      } else {
-        const newDistance = parseFloat(newValue);
-        // Check if the parsed distance is a number
-        if (!isNaN(newDistance)) {
-          // Check if newDistance is within the allowed range
-          if (newDistance >= 0 && newDistance <= maxDistance) {
-            setInputDistance(newDistance); // Update the input with new value if within range
-            setDistance(newDistance); // Update the distance state
-            // Update elevation based on the new distance
-            if (!elevationEdited) { // Check if elevation was manually edited
-              const interpolatedData = interpolateTrackpointData(newDistance, trackpoints);
-              setElevation(interpolatedData.elevation);
-            }
-          } else {
-            // If newDistance is out of bounds, reset to the maxDistance
-            alert("Distance cannot be greater than the last trackpoint.");
-            setInputDistance(maxDistance); // Reset input to maxDistance if out of bounds
-            setDistance(maxDistance); // Ensure distance state is also set to maxDistance
-            // Update elevation at maxDistance
-            const interpolatedData = interpolateTrackpointData(maxDistance, trackpoints);
-            if (interpolatedData) {
-              setElevation(interpolatedData.elevation);
-            }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const finalElevation = elevationEdited ? elevation : findNearestTrackpointElevation(distance);
+    const waypointData = {
+      id: editWaypointId,
+      name,
+      description,
+      elevation: finalElevation,
+      distanceFromStart: distance,
+      type,
+      secondaryType,
+      elevationEdited,
+    };
+    if (editWaypointId) {
+      dispatch(updateWaypoint(waypointData));
+    } else {
+      dispatch(addWaypointAndTrackpoint(waypointData));
+    }
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setEditWaypointId(null);
+    setName('');
+    setDescription('');
+    setElevation(0);
+    setDistance(0);
+    setType('null');
+    setSecondaryType('null');
+    setElevationEdited(false);
+  };
+
+  const handleAddClick = () => {
+    const interpolatedData = trackpoints.length > 0 ? interpolateTrackpointData(0, trackpoints) : { lat: 0, lon: 0, elevation: 0 };
+    const newWaypoint = {
+      name: '',
+      description: '',
+      lat: interpolatedData.lat,
+      lon: interpolatedData.lon,
+      elevation: interpolatedData.elevation,
+      distanceFromStart: 0,
+      createdAt: new Date().toISOString(),
+      userCreated: true,
+    };
+    dispatch(addWaypointAndTrackpoint(newWaypoint));
+    resetForm();
+  };
+
+  const handleElevationChange = (e) => {
+    const newElevation = parseFloat(e.target.value);
+    if (!isNaN(newElevation)) {
+      setElevation(newElevation);
+      setElevationEdited(true);
+    }
+  };
+
+  const handleDistanceChange = (e) => {
+    const newValue = e.target.value;
+    if (newValue === '') {
+      setInputDistance('');
+    } else {
+      const newDistance = parseFloat(newValue);
+      if (!isNaN(newDistance)) {
+        if (newDistance >= 0 && newDistance <= maxDistance) {
+          setInputDistance(newDistance);
+          setDistance(newDistance);
+          if (!elevationEdited) {
+            const interpolatedData = interpolateTrackpointData(newDistance, trackpoints);
+            setElevation(interpolatedData.elevation);
+          }
+        } else {
+          alert("Distance cannot be greater than the last trackpoint.");
+          setInputDistance(maxDistance);
+          setDistance(maxDistance);
+          const interpolatedData = interpolateTrackpointData(maxDistance, trackpoints);
+          if (interpolatedData) {
+            setElevation(interpolatedData.elevation);
           }
         }
       }
-    };
-    
-    
-    
+    }
+  };
 
-    return (
-      <EditorContainer>
-          <h3>Waypoints (Points of interest)</h3>
-          <CreateButton onClick={handleAddClick}>Create waypoint</CreateButton>
-          <WaypointList>
-            {waypoints.map((waypoint) => (
-              <WaypointItem
-                key={waypoint.id}
-                onClick={() => handleEditClick(waypoint)} // Call handleEditClick with the waypoint
-              >
-                {editWaypointId === waypoint.id ? (
-                          <StyledForm
-                            isActive={true} // Always true because we're not toggling it closed anymore
-                            onSubmit={handleSubmit}
-                            
-                          > 
-                            <div className='span-3'>
-                              <label htmlFor="name">Name</label>
-                              <FormInput 
-                                  id="name"
-                                  type="text" 
-                                  defaultValue={waypoint.name} 
-                                  onChange={(e) => setName(e.target.value)} 
-                                  placeholder="Waypoint Name" 
-                              />
-                            </div>
-                            <div className='span-2'>
-                              <label htmlFor="name">Type</label>
-                              <select value={type} onChange={(e) => setType(e.target.value)}>
-                                <option value="null">Select a type</option>
-                                <option value="start">Start</option>
-                                <option value="climb">Climb</option>
-                                <option value="sprint">Sprint</option>
-                                <option value="scenario">Scenario</option>
-                                <option value="other">Other</option>
-                                <option value="end">End</option>
-                              </select>
-                            </div>
-                            <div className='span-3 span-down-3'>
-                                <FormTextarea 
-                                    id='description'
-                                    type="textarea"
-                                    defaultValue={waypoint.description} 
-                                    onChange={(e) => setDescription(e.target.value)} 
-                                    placeholder="Description" 
-                                />
-                             </div>
-                             <div className='span-2'>
-                              <label htmlFor="elevation">Elevation (m)</label>
-                                <FormInput 
-                                  id="elevation"
-                                  type="number" 
-                                  value={elevation.toString()} 
-                                  onChange={handleElevationChange}
-                                  placeholder="Elevation (m)" 
-                                />
-                              </div>
-                              <div className='span-2'>
-                                <label htmlFor="distance">Distance from start (km)</label>
-                                <FormInput 
-                                  id="distance"
-                                  type="number" 
-                                  value={distance.toString()}
-                                  onChange={handleDistanceChange}
-                                  placeholder="Distance from Start (km)" 
-                                />
-                              </div>
-
-                                <CancelButton type="button" onClick={(e) => {
-                                    e.stopPropagation(); // Prevent click from bubbling up to the WaypointItem's onClick
-                                    setEditWaypointId(null); // Collapse the form without saving changes
-                                }}>Cancel</CancelButton>
-                                <SaveButton primary type="submit">Save Changes</SaveButton>
-                            </StyledForm>
-                        ) : (
-                          // Display waypoint information when it's not in edit mode
-                          <div>
-                            <span>{`${waypoint.distanceFromStart.toFixed(2)} km, ${waypoint.name}, ${waypoint.elevation} m`}</span>
-                          </div>
-                        )}
-                        <DeleteButton
-                          onClick={(e) => {
-                            e.stopPropagation(); // Stop click from bubbling up to the WaypointItem's onClick
-                            handleDeleteClick(waypoint.id);
-                          }}
-                        >
-                          Delete
-                        </DeleteButton>
-                      </WaypointItem>
-                ))}
-            </WaypointList>
-        </EditorContainer>
-    );
+  return (
+    <EditorContainer>
+      <h3>Waypoints (Points of interest)</h3>
+      <CreateButton onClick={handleAddClick}>Create waypoint</CreateButton>
+      <WaypointList>
+        {waypoints.map((waypoint) => (
+          <WaypointItem key={waypoint.id} onClick={() => handleEditClick(waypoint)}>
+            {editWaypointId === waypoint.id ? (
+              <StyledForm isActive={true} onSubmit={handleSubmit}>
+                <div className='span-3'>
+                  <label htmlFor="name">Name</label>
+                  <FormInput id="name" type="text" defaultValue={waypoint.name} onChange={(e) => setName(e.target.value)} placeholder="Waypoint Name" />
+                </div>
+                <div className='span-2'>
+                  <label htmlFor="name">Type</label>
+                  <select value={type} onChange={(e) => setType(e.target.value)}>
+                    <option value="null">Select a type</option>
+                    <option value="start">Start</option>
+                    <option value="climb">Climb</option>
+                    <option value="sprint">Sprint</option>
+                    <option value="scenario">Scenario</option>
+                    <option value="other">Other</option>
+                    <option value="end">End</option>
+                  </select>
+                </div>
+                <div className='span-3 span-down-3'>
+                  <FormTextarea id='description' type="textarea" defaultValue={waypoint.description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />
+                </div>
+                <div className={`span-2 ${type !== 'climb' ? 'greyed-out' : ''}`}>
+                  <label htmlFor="secondaryType">Marker Type</label>
+                  <select
+                    id="markerType"
+                    value={secondaryType}
+                    onChange={(e) => setSecondaryType(e.target.value)}
+                    disabled={type !== 'climb'}
+                  >
+                    <option value="">Select Marker Type</option>
+                    <option value="cat1">Category 1</option>
+                    <option value="cat2">Category 2</option>
+                    <option value="cat3">Category 3</option>
+                    <option value="cat4">Category 4</option>
+                    <option value="catHC">Hors Catégorie (HC)</option>
+                    <option value="catCC">Cima Coppi (CC)</option>
+                  </select>
+                </div>
+                <div className='span-2'>
+                  <label htmlFor="elevation">Elevation (m)</label>
+                  <FormInput id="elevation" type="number" value={elevation.toString()} onChange={handleElevationChange} placeholder="Elevation (m)" />
+                </div>
+                <div className='span-2'>
+                  <label htmlFor="distance">Distance from start (km)</label>
+                  <FormInput id="distance" type="number" value={distance.toString()} onChange={handleDistanceChange} placeholder="Distance from Start (km)" />
+                </div>
+                <CancelButton type="button" onClick={(e) => {
+                  e.stopPropagation();
+                  setEditWaypointId(null);
+                }}>Cancel</CancelButton>
+                <SaveButton primary type="submit">Save Changes</SaveButton>
+              </StyledForm>
+            ) : (
+              <div>
+                <span>{`${waypoint.distanceFromStart.toFixed(2)} km, ${waypoint.name}, ${waypoint.elevation} m`}</span>
+              </div>
+            )}
+            <DeleteButton onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteClick(waypoint.id);
+            }}>Delete</DeleteButton>
+          </WaypointItem>
+        ))}
+      </WaypointList>
+    </EditorContainer>
+  );
 };
-
-
 
 export default WaypointEditor;

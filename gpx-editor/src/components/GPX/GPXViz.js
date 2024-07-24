@@ -1,6 +1,8 @@
 // IMPORTS
 import React, { useState } from 'react';
 import GPXProfile from './GPXProfile'; // Adjust the path as necessary
+import GPXProfile_D3 from './GPXProfile_D3';
+import GPXProfile_3D from './GPXProfile_3D';
 import GPXMap from './GPXMap'; // Adjust the path as necessary
 import { useSelector, useDispatch } from 'react-redux';
 import { setStageTitle } from '../../redux/actions/GPXActions';
@@ -31,7 +33,6 @@ const GPXViz = () => {
   const [gpxData, setGpxData] = useState(null); // State to hold GPX data
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(stageTitle);
-
   const [activeProfileMapComponent, setActiveProfileMapComponent] = useState('profile');
   const [activeWaypointSegmentComponent, setActiveWaypointSegmentComponent] = useState('waypoints');
 
@@ -68,11 +69,19 @@ const GPXViz = () => {
       {isEditing && <button onClick={handleSaveClick}>Save</button>}
       <Container>
         <SliderContainer>
-          <button onClick={() => setActiveProfileMapComponent('profile')}>Stage Profile</button>
+          <button onClick={() => setActiveProfileMapComponent('profile')}>Stage Profile (Chart.js)</button>
+          <button onClick={() => setActiveProfileMapComponent('d3profile')}>Stage Profile (D3)</button>
+          <button onClick={() => setActiveProfileMapComponent('3dprofile')}>Stage Profile (3D)</button>
           <button onClick={() => setActiveProfileMapComponent('map')}>Stage Map</button>
           <ComponentView>
             <div style={{ display: activeProfileMapComponent === 'profile' ? 'block' : 'none' }}>
               <GPXProfile />
+            </div>
+            <div style={{ display: activeProfileMapComponent === 'd3profile' ? 'block' : 'none' }}>
+              <GPXProfile_D3 />
+            </div>
+            <div style={{ display: activeProfileMapComponent === '3dprofile' ? 'block' : 'none' }}>
+              <GPXProfile_3D />
             </div>
             <div style={{ display: activeProfileMapComponent === 'map' ? 'block' : 'none' }}>
               <GPXMap />
