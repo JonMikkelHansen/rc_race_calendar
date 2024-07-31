@@ -1,5 +1,4 @@
-// IMPORTS
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GPXProfile from './GPXProfile'; // Adjust the path as necessary
 import GPXProfile_D3 from './GPXProfile_D3';
 import GPXProfile_3D from './GPXProfile_3D';
@@ -9,28 +8,71 @@ import { setStageTitle } from '../../redux/actions/GPXActions';
 import styled from 'styled-components';
 import WaypointEditor from './WaypointEditor';
 import SegmentEditor from './SegmentEditor';
+import { BarChart2, TrendingUp, Globe, Map } from 'react-feather'; // Feather icons
+import GPXChartControls from './GPXChartControls';
 
 const Container = styled.div`
-  display: flex; /* Aligns sliders side by side */
-  justify-content: center; /* Centers the sliders */
-  width: 100%; /* Full width of the container */
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
 `;
 
-const SliderContainer = styled.div`
-  width: 50%; /* Each slider takes up half of the container width */
-  margin: auto; /* Center align the slider */
+const LeftPane = styled.div`
+  width: 48%;
+  margin-right: 2%;
+  box-sizing: border-box;
+`;
+
+const RightPane = styled.div`
+  width: 48%;
+  margin-left: 2%;
+  box-sizing: border-box;
+`;
+
+const ButtonRow = styled.div`
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 10px;
+  button {
+    padding: 10px 15px;
+    cursor: pointer;
+    background-color: #2c2f33;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+    svg {
+      margin-left: 8px;
+      height: 16px; // Adjusted size for the icons
+    }
+    &.active {
+      background-color: #7289da;
+    }
+  }
 `;
 
 const ComponentView = styled.div`
-  width: 100%; /* Full width of the slider container */
-  padding-top: 5%;
-  position: relative; /* Child absolute positioning context */
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+`;
+
+const ComponentContent = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 `;
 
 const GPXViz = () => {
   const dispatch = useDispatch();
   const stageTitle = useSelector(state => state.stageTitle || 'Unknown');
-  const [gpxData, setGpxData] = useState(null); // State to hold GPX data
+  const [gpxData, setGpxData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(stageTitle);
   const [activeProfileMapComponent, setActiveProfileMapComponent] = useState('profile');
@@ -50,6 +92,15 @@ const GPXViz = () => {
     dispatch(setStageTitle(editedTitle));
   };
 
+  useEffect(() => {
+    // Trigger resize to refresh D3 graph when D3 profile is active
+    if (activeProfileMapComponent === 'd3profile') {
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 250); // A slight delay to ensure the container is loaded
+    }
+  }, [activeProfileMapComponent]);
+
   return (
     <div>
       <h2>Stage:&nbsp;
@@ -68,38 +119,73 @@ const GPXViz = () => {
       </h2>
       {isEditing && <button onClick={handleSaveClick}>Save</button>}
       <Container>
-        <SliderContainer>
-          <button onClick={() => setActiveProfileMapComponent('profile')}>Stage Profile (Chart.js)</button>
-          <button onClick={() => setActiveProfileMapComponent('d3profile')}>Stage Profile (D3)</button>
-          <button onClick={() => setActiveProfileMapComponent('3dprofile')}>Stage Profile (3D)</button>
-          <button onClick={() => setActiveProfileMapComponent('map')}>Stage Map</button>
+        <LeftPane>
+          <ButtonRow>
+            <button 
+              onClick={() => setActiveProfileMapComponent('profile')}
+              className={activeProfileMapComponent === 'profile' ? 'active' : ''}
+            >
+              Stage Profile (Chart.js) <TrendingUp />
+            </button>
+            <button 
+              onClick={() => setActiveProfileMapComponent('d3profile')}
+              className={activeProfileMapComponent === 'd3profile' ? 'active' : ''}
+            >
+              Stage Profile (D3) <BarChart2 />
+            </button>
+            <button 
+              onClick={() => setActiveProfileMapComponent('3dprofile')}
+              className={activeProfileMapComponent === '3dprofile' ? 'active' : ''}
+            >
+              Stage Profile (3D) <Globe />
+            </button>
+            <button 
+              onClick={() => setActiveProfileMapComponent('map')}
+              className={activeProfileMapComponent === 'map' ? 'active' : ''}
+            >
+              Stage Map <Map />
+            </button>
+          </ButtonRow>
           <ComponentView>
-            <div style={{ display: activeProfileMapComponent === 'profile' ? 'block' : 'none' }}>
+            <ComponentContent style={{ display: activeProfileMapComponent === 'profile' ? 'block' : 'none' }}>
               <GPXProfile />
-            </div>
-            <div style={{ display: activeProfileMapComponent === 'd3profile' ? 'block' : 'none' }}>
+            </ComponentContent>
+            <ComponentContent style={{ display: activeProfileMapComponent === 'd3profile' ? 'block' : 'none' }}>
               <GPXProfile_D3 />
-            </div>
-            <div style={{ display: activeProfileMapComponent === '3dprofile' ? 'block' : 'none' }}>
+            </ComponentContent>
+            <ComponentContent style={{ display: activeProfileMapComponent === '3dprofile' ? 'block' : 'none' }}>
               <GPXProfile_3D />
-            </div>
-            <div style={{ display: activeProfileMapComponent === 'map' ? 'block' : 'none' }}>
+            </ComponentContent>
+            <ComponentContent style={{ display: activeProfileMapComponent === 'map' ? 'block' : 'none' }}>
               <GPXMap />
-            </div>
+            </ComponentContent>
           </ComponentView>
-        </SliderContainer>
-        <SliderContainer>
-          <button onClick={() => setActiveWaypointSegmentComponent('waypoints')}>Waypoints</button>
-          <button onClick={() => setActiveWaypointSegmentComponent('segments')}>Segments</button>
+          <GPXChartControls />
+        </LeftPane>
+        <RightPane>
+          <ButtonRow>
+            <button 
+              onClick={() => setActiveWaypointSegmentComponent('waypoints')}
+              className={activeWaypointSegmentComponent === 'waypoints' ? 'active' : ''}
+            >
+              Waypoints
+            </button>
+            <button 
+              onClick={() => setActiveWaypointSegmentComponent('segments')}
+              className={activeWaypointSegmentComponent === 'segments' ? 'active' : ''}
+            >
+              Segments
+            </button>
+          </ButtonRow>
           <ComponentView>
-            <div style={{ display: activeWaypointSegmentComponent === 'waypoints' ? 'block' : 'none' }}>
+            <ComponentContent style={{ display: activeWaypointSegmentComponent === 'waypoints' ? 'block' : 'none' }}>
               <WaypointEditor gpxData={gpxData} onEdit={handleGPXData} />
-            </div>
-            <div style={{ display: activeWaypointSegmentComponent === 'segments' ? 'block' : 'none' }}>
+            </ComponentContent>
+            <ComponentContent style={{ display: activeWaypointSegmentComponent === 'segments' ? 'block' : 'none' }}>
               <SegmentEditor gpxData={gpxData} onEdit={handleGPXData} />
-            </div>    
-          </ComponentView>     
-        </SliderContainer>
+            </ComponentContent>
+          </ComponentView>
+        </RightPane>
       </Container>
     </div>
   );

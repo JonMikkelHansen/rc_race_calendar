@@ -2,7 +2,22 @@ import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { useSelector } from 'react-redux';
 import { calculateHaversineDistance } from '../../Utilities.js';
-import GPXChartControls from './GPXChartControls.js';
+import styled from 'styled-components';
+
+const ChartWrapper = styled.div`
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  position: relative;
+`;
+
+const StyledChartContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+`;
 
 const GPXProfile_D3 = () => {
   const svgRef = useRef();
@@ -11,6 +26,23 @@ const GPXProfile_D3 = () => {
   const maxY = useSelector(state => state.maxY);
 
   useEffect(() => {
+    const handleResize = () => {
+      drawChart();
+    };
+
+    window.addEventListener('resize', handleResize);
+    drawChart(); // Ensuring that the chart draws on initial load when component mounts
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    drawChart();
+  }, [trackpointGeoJSON, minY, maxY]);
+
+  const drawChart = () => {
     if (!trackpointGeoJSON || !trackpointGeoJSON.features.length) {
       console.log('No trackpointGeoJSON data available');
       return;
@@ -29,11 +61,15 @@ const GPXProfile_D3 = () => {
       };
     });
 
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
+    const svgElement = svgRef.current;
+    if (!svgElement) return; // Ensure the SVG element exists
 
-    const width = 800;
-    const height = 400;
+    const svg = d3.select(svgElement);
+    svg.selectAll('*').remove(); // Clear previous SVG contents
+
+    const container = svgElement.parentNode;
+    const width = container.clientWidth;
+    const height = container.clientHeight; // Adjusted for dynamic sizing
     const margin = { top: 20, right: 50, bottom: 30, left: 40 };
 
     const x = d3.scaleLinear()
@@ -46,12 +82,6 @@ const GPXProfile_D3 = () => {
 
     const area = d3.area()
       .x(d => x(d.distanceFromStart))
-      .y0(height - margin.bottom)
-      .y1(d => y(d.elevation))
-      .curve(d3.curveMonotoneX);
-
-    const stretchedArea = d3.area()
-      .x(d => x(d.distanceFromStart * 1.02))  // Apply a slight stretch by multiplying distance
       .y0(height - margin.bottom)
       .y1(d => y(d.elevation))
       .curve(d3.curveMonotoneX);
@@ -78,8 +108,8 @@ const GPXProfile_D3 = () => {
       .datum(features)
       .attr('fill', '#898D8F')
       .attr('clip-path', 'url(#chart-area)')
-      .attr('d', stretchedArea)
-      .attr('transform', 'translate(-5, -5)');
+      .attr('d', area)
+      .attr('transform', 'translate(6, -6)'); // Offset slightly to the right and up
 
     // Main graph fill
     svg.append('path')
@@ -100,7 +130,7 @@ const GPXProfile_D3 = () => {
     // Axes
     const maxDistance = d3.max(features, d => d.distanceFromStart);
     const tickValues = x.ticks().concat(maxDistance);
-    
+
     svg.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(x)
@@ -111,14 +141,14 @@ const GPXProfile_D3 = () => {
     svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
       .call(d3.axisLeft(y));
-
-  }, [trackpointGeoJSON, minY, maxY]);
+  };
 
   return (
-    <div>
-      <svg ref={svgRef} width={800} height={400}></svg>
-      <GPXChartControls />
-    </div>
+    <ChartWrapper>
+      <StyledChartContainer>
+        <svg ref={svgRef} style={{ width: '100%', height: '100%' }}></svg>
+      </StyledChartContainer>
+    </ChartWrapper>
   );
 };
 

@@ -146,12 +146,8 @@ const GPXProfile = () => {
 
     return (
         <div>
-        <Line data={data} options={options} />
-        
-        <div>
-           <GPXChartControls />
+            <Line data={data} options={options} />
         </div>
-    </div>
     );
 };
 
