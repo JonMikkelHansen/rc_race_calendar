@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import GPXProfile from './GPXProfile'; // Adjust the path as necessary
-import GPXProfile_D3 from './GPXProfile_D3';
-import GPXProfile_3D from './GPXProfile_3D';
-import GPXMap from './GPXMap'; // Adjust the path as necessary
+import React, { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setStageTitle } from '../../redux/actions/GPXActions';
 import styled from 'styled-components';
+import { Edit, Save, BarChart2, TrendingUp, Globe, Map } from 'react-feather'; // Feather icons
+import GPXProfile from './GPXProfile';
+import GPXProfile_D3 from './GPXProfile_D3';
+import GPXProfile_3D from './GPXProfile_3D';
+import GPXMap from './GPXMap';
+import GPXChartControls from './GPXChartControls';
 import WaypointEditor from './WaypointEditor';
 import SegmentEditor from './SegmentEditor';
-import { BarChart2, TrendingUp, Globe, Map } from 'react-feather'; // Feather icons
-import GPXChartControls from './GPXChartControls';
 
 const Container = styled.div`
   display: flex;
@@ -17,6 +17,63 @@ const Container = styled.div`
   width: 100%;
   padding: 20px;
   box-sizing: border-box;
+`;
+
+// Styled components for the "Stage" title and its actions
+const StageTitleContainer = styled.div`
+  background-color: #2c2f33;
+  color: #ffffff;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  button {
+    padding: 10px 15px;
+    cursor: pointer;
+    background-color: #2c2f33;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+    svg {
+      margin-left: 8px;
+      height: 16px; // Adjusted size for the icons
+    }
+    &.active {
+      background-color: #7289da;
+    }
+  }
+`;
+
+const StageName = styled.span`
+  font-weight: bold;
+  margin-right: 8px;
+`;
+
+const FileName = styled.span`
+  flex-grow: 2;
+`;
+
+const EditButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+`;
+
+const SaveButton = styled(EditButton)``;
+
+const Input = styled.input`
+  background: #40444b;
+  border: none;
+  color: white;
+  padding: 5px;
+  border-radius: 4px;
 `;
 
 const LeftPane = styled.div`
@@ -78,11 +135,6 @@ const GPXViz = () => {
   const [activeProfileMapComponent, setActiveProfileMapComponent] = useState('profile');
   const [activeWaypointSegmentComponent, setActiveWaypointSegmentComponent] = useState('waypoints');
 
-  // Function to handle changes to GPX data
-  const handleGPXData = (updatedData) => {
-    setGpxData(updatedData);
-  };
-
   const handleEditClick = () => {
     setIsEditing(true);
   };
@@ -90,6 +142,10 @@ const GPXViz = () => {
   const handleSaveClick = () => {
     setIsEditing(false);
     dispatch(setStageTitle(editedTitle));
+  };
+
+  const handleGPXData = (updatedData) => {
+    setGpxData(updatedData);
   };
 
   useEffect(() => {
@@ -103,23 +159,23 @@ const GPXViz = () => {
 
   return (
     <div>
-      <h2>Stage:&nbsp;
-        {isEditing ? (
-          <input
-            type="text"
-            value={editedTitle}
-            onChange={(e) => setEditedTitle(e.target.value)}
-          />
-        ) : (
-          <>
-            {stageTitle}
-            <button onClick={handleEditClick}>Edit</button>
-          </>
-        )}
-      </h2>
-      {isEditing && <button onClick={handleSaveClick}>Save</button>}
       <Container>
         <LeftPane>
+        <StageTitleContainer>
+      {isEditing ? (
+        <>
+          <StageName>Stage:</StageName>
+          <input type="text" value={editedTitle} onChange={(e) => setEditedTitle(e.target.value)} />
+          <button onClick={handleSaveClick}><Save /></button>
+        </>
+      ) : (
+        <>
+          <StageName>Stage:</StageName>
+          <span>{stageTitle}</span>
+          <button onClick={handleEditClick}><Edit /></button>
+        </>
+      )}
+    </StageTitleContainer>
           <ButtonRow>
             <button 
               onClick={() => setActiveProfileMapComponent('profile')}
