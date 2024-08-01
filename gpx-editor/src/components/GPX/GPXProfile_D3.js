@@ -26,20 +26,16 @@ const GPXProfile_D3 = () => {
   const maxY = useSelector(state => state.maxY);
 
   useEffect(() => {
+    if (svgRef.current) {
+      drawChart();
+    }
     const handleResize = () => {
       drawChart();
     };
-
     window.addEventListener('resize', handleResize);
-    drawChart(); // Ensuring that the chart draws on initial load when component mounts
-
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
-
-  useEffect(() => {
-    drawChart();
   }, [trackpointGeoJSON, minY, maxY]);
 
   const drawChart = () => {
@@ -62,14 +58,12 @@ const GPXProfile_D3 = () => {
     });
 
     const svgElement = svgRef.current;
-    if (!svgElement) return; // Ensure the SVG element exists
-
     const svg = d3.select(svgElement);
-    svg.selectAll('*').remove(); // Clear previous SVG contents
+    svg.selectAll('*').remove();
 
     const container = svgElement.parentNode;
     const width = container.clientWidth;
-    const height = container.clientHeight; // Adjusted for dynamic sizing
+    const height = container.clientHeight;
     const margin = { top: 20, right: 50, bottom: 30, left: 40 };
 
     const x = d3.scaleLinear()
@@ -86,7 +80,6 @@ const GPXProfile_D3 = () => {
       .y1(d => y(d.elevation))
       .curve(d3.curveMonotoneX);
 
-    // Define clipping path to restrict elements to the axis area
     svg.append("defs").append("clipPath")
       .attr("id", "chart-area")
       .append("rect")
@@ -95,7 +88,6 @@ const GPXProfile_D3 = () => {
       .attr("width", width - margin.left - margin.right)
       .attr("height", height - margin.top - margin.bottom);
 
-    // Background rectangle
     svg.append('rect')
       .attr('x', margin.left)
       .attr('y', margin.top)
@@ -103,22 +95,19 @@ const GPXProfile_D3 = () => {
       .attr('height', height - margin.top - margin.bottom)
       .attr('fill', '#050111');
 
-    // Depth effect shadow
     svg.append('path')
       .datum(features)
       .attr('fill', '#898D8F')
       .attr('clip-path', 'url(#chart-area)')
       .attr('d', area)
-      .attr('transform', 'translate(6, -6)'); // Offset slightly to the right and up
+      .attr('transform', 'translate(6, -6)');
 
-    // Main graph fill
     svg.append('path')
       .datum(features)
       .attr('fill', '#6E7375')
       .attr('clip-path', 'url(#chart-area)')
       .attr('d', area);
 
-    // Main graph line
     svg.append('path')
       .datum(features)
       .attr('fill', 'none')
@@ -127,14 +116,10 @@ const GPXProfile_D3 = () => {
       .attr('clip-path', 'url(#chart-area)')
       .attr('d', area.lineY1());
 
-    // Axes
-    const maxDistance = d3.max(features, d => d.distanceFromStart);
-    const tickValues = x.ticks().concat(maxDistance);
-
     svg.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(x)
-        .tickValues(tickValues)
+        .tickValues(x.ticks().concat(d3.max(features, d => d.distanceFromStart)))
         .tickFormat(d => `${d.toFixed(2)} km`)
         .tickSizeOuter(0));
 

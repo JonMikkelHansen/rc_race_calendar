@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSelector, useDispatch } from 'react-redux';
+import { PlusCircle } from 'react-feather'; // Make sure to add this
 import { updateWaypoint, deleteWaypoint, addWaypointAndTrackpoint, setMinYManual, setMaxYManual } from '../../redux/actions/GPXActions';
 import { interpolateTrackpointData } from '../../Utilities'; // Adjust the path as necessary
 
@@ -131,9 +132,14 @@ const CreateButton = styled.button`
   background-color: ${props => props.primary ? '#007bff' : '#6c757d'};
   border-radius: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center; // Ensure items are aligned inline
 
   &:hover {
     background-color: ${props => props.primary ? '#0056b3' : '#5a6268'};
+  }
+  svg {
+    margin-right: 5px; // Add some spacing between the icon and text
   }
 `;
 
@@ -356,8 +362,8 @@ export const WaypointEditor = () => {
 
   return (
     <EditorContainer>
-      <h3>Waypoints (Points of interest)</h3>
-      <CreateButton onClick={handleAddClick}>Create waypoint</CreateButton>
+      <h3>Keypoints</h3>
+      <CreateButton onClick={handleAddClick}><PlusCircle size={16} />Create waypoint</CreateButton>
       <WaypointList>
         {waypoints.map((waypoint) => (
           <WaypointItem key={waypoint.id} onClick={() => handleEditClick(waypoint)}>
