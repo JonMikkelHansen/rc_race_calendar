@@ -14,10 +14,9 @@ const GPXMap = () => {
         const map = new mapboxgl.Map({
             container: mapContainerRef.current,
             style: 'mapbox://styles/jonhansen/clu14zcjr00o701qw9sxd44ty', // Ensure this is a style that supports 3D terrain
-            // style: 'mapbox://styles/mapbox/outdoors-v11',
             center: [0, 0],
             zoom: 2,
-            pitch: 70, // Set the initial pitch
+            pitch: 40, // Set the initial pitch
             bearing: 0, // Set the initial bearing to face north
         });
 
@@ -87,38 +86,40 @@ const GPXMap = () => {
                         bounds.extend(coord);
                     });
                 });
-                map.fitBounds(bounds, { padding: 20, pitch: 70, duration: 0 });
+                map.fitBounds(bounds, { padding: 20, duration: 0 });
+                map.setPitch(40); // Ensure the pitch is set after fitting bounds
             }
 
             // Waypoints layer
             if (waypointGeoJSON && waypointGeoJSON.features && waypointGeoJSON.features.length > 0) {
-                /*map.addSource('waypoints', { type: 'geojson', data: waypointGeoJSON });
+                map.addSource('waypoints', { type: 'geojson', data: waypointGeoJSON });
+
                 map.addLayer({
                     id: 'waypoints',
                     type: 'circle',
                     source: 'waypoints',
                     paint: {
-                        'circle-radius': 3,
-                        'circle-color': '#FF0000'
+                        'circle-radius': 5,
+                        'circle-color': '#FFFFFF'
                     }
-                }); */
-                waypointGeoJSON.features.forEach(feature => {
-                    // Custom HTML marker for each waypoint
-                    const el = document.createElement('div');
-                    el.className = 'waypoint-marker';
+                });
 
-                    const markerText = document.createElement('div');
-                    markerText.textContent = feature.properties.name;
-                    markerText.style.cssText = 'background: white; padding: 2px; border-radius: 3px;';
-                    el.appendChild(markerText);
-
-                    const line = document.createElement('div');
-                    line.style.cssText = 'height: 20px; width: 1px; background-color: black; margin: 0 auto; border: 2px dotted black;';
-                    el.appendChild(line);
-
-                    new mapboxgl.Marker(el)
-                        .setLngLat(feature.geometry.coordinates)
-                        .addTo(map);
+                map.addLayer({
+                    id: 'waypoint-labels',
+                    type: 'symbol',
+                    source: 'waypoints',
+                    layout: {
+                        'text-field': ['get', 'name'],
+                        'text-size': 16,
+                        'text-font': ['Arial Unicode MS Bold'],
+                        'text-anchor': 'top',
+                        'text-offset': [0, 1.5],
+                        'symbol-placement': 'point'
+                    },
+                    paint: {
+                        'text-color': '#FFFFFF',
+                        'text-halo-color': 'rgba(0, 0, 0, 0)' // Remove the dark outline
+                    }
                 });
             }
         });
@@ -132,7 +133,7 @@ const GPXMap = () => {
             map.remove();
             resizeObserver.disconnect();
         };
-    }, [trackpointGeoJSON, waypointGeoJSON]); // Dependencies
+    }, [trackpointGeoJSON, waypointGeoJSON]);
 
     return <div ref={mapContainerRef} style={{ width: '100%', height: '0', paddingBottom: '56.25%', position: 'relative' }} />;
 };
