@@ -1,7 +1,7 @@
-import { fetchRaces, fetchRacesForSeasons } from '../../components/api';
+import { fetchRaces } from '../../components/api';
 import { v4 as uuidv4 } from 'uuid';
-import { interpolateTrackpointData } from '../../Utilities';
-import { createWaypointGeoJSON } from '../../components/GPX/GeoJParser';
+import { interpolateTrackpointData } from '../../Utilities'; // Adjust the path as necessary
+import { createWaypointGeoJSON } from '../../components/GPX/GeoJParser'; // Ensure correct import path
 
 /*************************************
     SELECTING SEASON, RACE AND STAGE
@@ -18,7 +18,6 @@ export const fetchRacesAsync = (season) => async (dispatch) => {
     dispatch({ type: FETCH_RACES_SUCCESS, payload: races });
   } catch (error) {
     console.error("Error fetching races:", error);
-    // Potential place for dispatching an error action
   }
 };
 
@@ -107,21 +106,19 @@ export const resetMinYMaxYManual = () => ({
   CREATING GEOJSON OBJECTS
 ******************************/
 
-// CREATING TRACKPOINT GEOJSON OBJECT
 export const SET_TRACKPOINT_GEOJSON = 'SET_TRACKPOINT_GEOJSON';
 export const setTrackpointGeoJSON = (geojson) => ({
   type: SET_TRACKPOINT_GEOJSON,
   payload: geojson,
 });
 
-//CREATING WAYPOINT GEOJSON OBJECT
 export const SET_WAYPOINT_GEOJSON = 'SET_WAYPOINT_GEOJSON';
 export const setWaypointGeoJSON = (geojson) => ({
   type: SET_WAYPOINT_GEOJSON,
   payload: geojson,
 });
 
-export const UPDATE_WAYPOINT_GEOJSON = 'UPDATE_WAYPOINT_GEOJSON'; // New action type
+export const UPDATE_WAYPOINT_GEOJSON = 'UPDATE_WAYPOINT_GEOJSON';
 
 /*************************************
   CREATING TRACKPOINTS AND WAYPOINTS
@@ -142,14 +139,27 @@ export const setWaypoints = (waypoints) => ({
 export const ADD_WAYPOINT = 'ADD_WAYPOINT';
 export const addWaypoint = (waypoint) => ({
   type: ADD_WAYPOINT,
-  payload: { ...waypoint, id: uuidv4(), type: waypoint.type }, // Generate a unique ID for the waypoint
+  payload: { ...waypoint, id: uuidv4(), type: waypoint.type },
 });
 
 export const DELETE_WAYPOINT = 'DELETE_WAYPOINT';
-export const deleteWaypoint = (waypointId) => ({
-  type: DELETE_WAYPOINT,
-  payload: waypointId,
-});
+export const deleteWaypoint = (waypointId) => {
+  return (dispatch, getState) => {
+    const { waypoints } = getState();
+    const updatedWaypoints = waypoints.filter(wp => wp.id !== waypointId);
+    const newWaypointGeoJSON = createWaypointGeoJSON(updatedWaypoints);
+
+    dispatch({
+      type: DELETE_WAYPOINT,
+      payload: waypointId,
+    });
+
+    dispatch({
+      type: UPDATE_WAYPOINT_GEOJSON,
+      payload: newWaypointGeoJSON,
+    });
+  };
+};
 
 export const UPDATE_WAYPOINT = 'UPDATE_WAYPOINT';
 export const updateWaypoint = (waypoint) => {
@@ -158,18 +168,12 @@ export const updateWaypoint = (waypoint) => {
     
     let finalElevation = waypoint.elevation;
     if (!waypoint.elevationEdited) {
-      // Only interpolate elevation if it hasn't been manually edited
       const interpolatedData = interpolateTrackpointData(waypoint.distanceFromStart, trackpoints);
       finalElevation = interpolatedData.elevation;
     }
 
-    const interpolatedData = interpolateTrackpointData(waypoint.distanceFromStart, trackpoints);
-
-    // Update the waypoint, including the final elevation, lat, and lon
     const updatedWaypoint = {
       ...waypoint,
-      lat: waypoint.lat ?? interpolatedData.lat,
-      lon: waypoint.lon ?? interpolatedData.lon,
       elevation: finalElevation,
     };
 
@@ -178,7 +182,6 @@ export const updateWaypoint = (waypoint) => {
       payload: updatedWaypoint,
     });
 
-    // Update waypointGeoJSON
     const updatedWaypoints = waypoints.map(wp => wp.id === updatedWaypoint.id ? updatedWaypoint : wp);
     const newWaypointGeoJSON = createWaypointGeoJSON(updatedWaypoints);
     dispatch({
@@ -186,23 +189,19 @@ export const updateWaypoint = (waypoint) => {
       payload: newWaypointGeoJSON,
     });
 
-    // Find and update the corresponding trackpoint to ensure consistency
     const trackpointIndex = trackpoints.findIndex(tp => tp.waypointID === waypoint.id);
     if (trackpointIndex !== -1) {
       const updatedTrackpoint = {
         ...trackpoints[trackpointIndex],
-        // Assuming you want to keep latitude and longitude in sync with any potential updates
-        lat: waypoint.lat ?? interpolatedData.lat,
-        lon: waypoint.lon ?? interpolatedData.lon,
-        elevation: finalElevation, // Use the same elevation as the waypoint
-        distanceFromStart: waypoint.distanceFromStart, // Ensure distance is updated if changed
+        lat: waypoint.lat ?? trackpoints[trackpointIndex].lat,
+        lon: waypoint.lon ?? trackpoints[trackpointIndex].lon,
+        elevation: finalElevation,
+        distanceFromStart: waypoint.distanceFromStart,
       };
 
-      // Create a new array of trackpoints with the updated entry
       const newTrackpoints = [...trackpoints];
       newTrackpoints[trackpointIndex] = updatedTrackpoint;
 
-      // Dispatch an action to update the array of trackpoints in the Redux store
       dispatch(setTrackpoints(newTrackpoints));
     }
   };
@@ -213,42 +212,35 @@ export const ADD_TRACKPOINT = 'ADD_TRACKPOINT';
 export const addWaypointAndTrackpoint = (waypointData) => {
   return (dispatch, getState) => {
     const { waypoints, trackpoints } = getState();
-    const newWaypointID = uuidv4(); // Generate a unique ID for the new waypoint
+    const newWaypointID = uuidv4();
     
-    // Calculate lat, lon, and elevation based on distanceFromStart
     const interpolatedData = interpolateTrackpointData(waypointData.distanceFromStart, trackpoints);
-
-    // Create a new waypoint
     const newWaypoint = {
       ...waypointData,
-      id: newWaypointID, // Use the same ID for waypoint
+      id: newWaypointID,
       lat: interpolatedData.lat,
       lon: interpolatedData.lon,
-      elevation: interpolatedData.elevation,
     };
-    
+
     dispatch({
       type: ADD_WAYPOINT,
       payload: newWaypoint,
     });
-    
-    // Optionally, add a corresponding trackpoint if it doesn't exist
+
     const newTrackpoint = {
       ...waypointData,
-      id: uuidv4(), // Assign a new ID to ensure uniqueness
-      waypointID: newWaypointID, // Link to the new waypoint
+      id: uuidv4(),
+      waypointID: newWaypointID,
       isWaypoint: true,
       lat: interpolatedData.lat,
       lon: interpolatedData.lon,
-      elevation: interpolatedData.elevation,
     };
-    
+
     dispatch({
       type: ADD_TRACKPOINT,
       payload: newTrackpoint,
     });
 
-    // Update waypointGeoJSON
     const updatedWaypoints = [...waypoints, newWaypoint];
     const newWaypointGeoJSON = createWaypointGeoJSON(updatedWaypoints);
     dispatch({
@@ -264,7 +256,7 @@ export const addWaypointAndTrackpoint = (waypointData) => {
 export const ADD_SEGMENT = 'ADD_SEGMENT';
 export const addSegment = ({ name, startDistance, endDistance }) => {
   return (dispatch, getState) => {
-    const { trackpoints } = getState(); // Assuming you have access to trackpoints here
+    const { trackpoints } = getState();
     const trackpointIndices = trackpoints.reduce((acc, { distanceFromStart }, index) => {
       if (distanceFromStart >= startDistance && distanceFromStart <= endDistance) {
         acc.push(index);
@@ -288,7 +280,7 @@ export const addSegment = ({ name, startDistance, endDistance }) => {
 export const EDIT_SEGMENT = 'EDIT_SEGMENT';
 export const editSegment = (segmentId, { name, startDistance, endDistance }) => {
   return (dispatch, getState) => {
-    const { trackpoints } = getState(); // Accessing trackpoints from state
+    const { trackpoints } = getState();
     const trackpointIndices = trackpoints.reduce((acc, { distanceFromStart }, index) => {
       if (distanceFromStart >= startDistance && distanceFromStart <= endDistance) {
         acc.push(index);

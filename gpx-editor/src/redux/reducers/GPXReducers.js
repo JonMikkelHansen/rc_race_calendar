@@ -3,12 +3,10 @@ import {
   SET_MINY, SET_MAXY, SET_TOLERANCE, SET_TENSION, 
   SET_TRACKPOINTS, ADD_TRACKPOINT, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT, SET_TRACKPOINT_GEOJSON, SET_WAYPOINT_GEOJSON, ADD_SEGMENT, EDIT_SEGMENT, DELETE_SEGMENT,
   SET_SHOW_TRACKPOINTS, SET_SHOW_WAYPOINTS, SET_SHOW_ANNOTATIONS,
-  SET_STAGE_TITLE, // Import the new action type
-  SET_MINY_MANUAL, SET_MAXY_MANUAL, RESET_MINY_MAXY_MANUAL, // Import newly added action types
-  UPDATE_WAYPOINT_GEOJSON // Import new action type
+  SET_STAGE_TITLE, SET_MINY_MANUAL, SET_MAXY_MANUAL, RESET_MINY_MAXY_MANUAL, 
+  UPDATE_WAYPOINT_GEOJSON 
 } from '../actions/GPXActions';
-
-import { createWaypointGeoJSON } from '../../components/GPX/GeoJParser'; // Import the function
+import { createWaypointGeoJSON } from '../../components/GPX/GeoJParser'; // Ensure correct import path
 
 const initialState = {
   races: [],
@@ -26,7 +24,7 @@ const initialState = {
   showTrackpoints: false,
   showWaypoints: true,
   showAnnotations: false,
-  stageTitle: '', // Initialize stageTitle as an empty string
+  stageTitle: '',
   minYManual: null,
   maxYManual: null,
 };
@@ -36,7 +34,7 @@ const GPXReducer = (state = initialState, action) => {
     case FETCH_RACES_SUCCESS:
       return { ...state, races: [...action.payload] };
     case SELECT_RACE:
-      return { ...state, selectedRace: action.payload }; // Reset selectedStage when a new race is selected
+      return { ...state, selectedRace: action.payload };
     case SELECT_STAGE:
       return { ...state, selectedStage: action.payload };
     case SET_MINY:
@@ -64,20 +62,16 @@ const GPXReducer = (state = initialState, action) => {
     case ADD_WAYPOINT:
       return { ...state, waypoints: [...state.waypoints, action.payload] };
     case DELETE_WAYPOINT:
-      const filteredWaypoints = state.waypoints.filter(wp => wp.id !== action.payload);
-      const newWaypointGeoJSONAfterDelete = createWaypointGeoJSON(filteredWaypoints);
       return { 
         ...state, 
-        waypoints: filteredWaypoints,
-        waypointGeoJSON: newWaypointGeoJSONAfterDelete 
+        waypoints: state.waypoints.filter(wp => wp.id !== action.payload),
+        waypointGeoJSON: createWaypointGeoJSON(state.waypoints.filter(wp => wp.id !== action.payload))
       };
     case UPDATE_WAYPOINT:
-      const updatedWaypoints = state.waypoints.map(wp => wp.id === action.payload.id ? action.payload : wp);
-      const newWaypointGeoJSONAfterUpdate = createWaypointGeoJSON(updatedWaypoints);
       return { 
         ...state, 
-        waypoints: updatedWaypoints,
-        waypointGeoJSON: newWaypointGeoJSONAfterUpdate 
+        waypoints: state.waypoints.map(wp => wp.id === action.payload.id ? action.payload : wp),
+        waypointGeoJSON: createWaypointGeoJSON(state.waypoints.map(wp => wp.id === action.payload.id ? action.payload : wp))
       };
     case SET_TRACKPOINT_GEOJSON:
       return { ...state, trackpointGeoJSON: action.payload };
@@ -98,7 +92,7 @@ const GPXReducer = (state = initialState, action) => {
       return { ...state, showWaypoints: action.payload };
     case SET_SHOW_ANNOTATIONS:
       return { ...state, showAnnotations: action.payload };
-    case SET_STAGE_TITLE: // New case for setting the stage title
+    case SET_STAGE_TITLE:
       return { ...state, stageTitle: action.payload };
     default:
       return state;

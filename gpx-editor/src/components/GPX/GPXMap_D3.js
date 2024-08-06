@@ -31,12 +31,13 @@ const ControlsWrapper = styled.div`
 const GPXProfile_D3 = () => {
   const svgRef = useRef();
   const trackpointGeoJSON = useSelector(state => state.trackpointGeoJSON);
+  const waypointGeoJSON = useSelector(state => state.waypointGeoJSON);
   const minY = useSelector(state => state.minY);
   const maxY = useSelector(state => state.maxY);
 
   useEffect(() => {
     drawChart();
-  }, [trackpointGeoJSON, minY, maxY]);
+  }, [trackpointGeoJSON, waypointGeoJSON, minY, maxY]);
 
   const drawChart = () => {
     if (!trackpointGeoJSON || !trackpointGeoJSON.features.length) {
@@ -137,6 +138,38 @@ const GPXProfile_D3 = () => {
     svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
       .call(d3.axisLeft(y));
+
+    /*******************************
+     * Adding Vertical Lines for Waypoints
+     *******************************/
+    console.log('Waypoint GeoJSON:', waypointGeoJSON);
+    if (waypointGeoJSON && waypointGeoJSON.features) {
+      waypointGeoJSON.features.forEach(feature => {
+        const { distanceFromStart } = feature.properties;
+
+        // Check if distanceFromStart exists and is a valid number
+        if (distanceFromStart == null || isNaN(distanceFromStart)) {
+          console.warn('Invalid distanceFromStart:', distanceFromStart);
+          return;
+        }
+
+        const xPosition = x(distanceFromStart);
+        console.log('Waypoint:', feature);
+        console.log('Waypoint Distance:', distanceFromStart);
+        console.log('X Position:', xPosition);
+
+        svg.append('line')
+          .attr('x1', xPosition)
+          .attr('y1', margin.top)
+          .attr('x2', xPosition)
+          .attr('y2', height - margin.bottom)
+          .attr('stroke', 'white')
+          .attr('stroke-width', 1)
+          .attr('clip-path', 'url(#chart-area)');
+      });
+    } else {
+      console.warn('No valid waypointGeoJSON.features found');
+    }
   };
 
   return (

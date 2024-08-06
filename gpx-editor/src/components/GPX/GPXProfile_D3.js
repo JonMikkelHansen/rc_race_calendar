@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { useSelector } from 'react-redux';
 import { calculateHaversineDistance } from '../../Utilities.js';
+import GPXChartControls from './GPXChartControls.js';
 import styled from 'styled-components';
 
 const ChartWrapper = styled.div`
@@ -9,6 +10,7 @@ const ChartWrapper = styled.div`
   height: 0;
   padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
   position: relative;
+  overflow: hidden;
 `;
 
 const StyledChartContainer = styled.div`
@@ -19,24 +21,23 @@ const StyledChartContainer = styled.div`
   height: 100%;
 `;
 
+const ControlsWrapper = styled.div`
+  padding-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
 const GPXProfile_D3 = () => {
   const svgRef = useRef();
   const trackpointGeoJSON = useSelector(state => state.trackpointGeoJSON);
+  const waypointGeoJSON = useSelector(state => state.waypointGeoJSON);
   const minY = useSelector(state => state.minY);
   const maxY = useSelector(state => state.maxY);
 
   useEffect(() => {
-    if (svgRef.current) {
-      drawChart();
-    }
-    const handleResize = () => {
-      drawChart();
-    };
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [trackpointGeoJSON, minY, maxY]);
+    drawChart();
+  }, [trackpointGeoJSON, waypointGeoJSON, minY, maxY]);
 
   const drawChart = () => {
     if (!trackpointGeoJSON || !trackpointGeoJSON.features.length) {
@@ -58,12 +59,14 @@ const GPXProfile_D3 = () => {
     });
 
     const svgElement = svgRef.current;
+    if (!svgElement) return;  // Ensure the svg element exists
+
     const svg = d3.select(svgElement);
     svg.selectAll('*').remove();
 
     const container = svgElement.parentNode;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 450; // 16:9 aspect ratio
     const margin = { top: 20, right: 50, bottom: 30, left: 40 };
 
     const x = d3.scaleLinear()
@@ -80,6 +83,7 @@ const GPXProfile_D3 = () => {
       .y1(d => y(d.elevation))
       .curve(d3.curveMonotoneX);
 
+    // Define clipping path to restrict elements to the axis area
     svg.append("defs").append("clipPath")
       .attr("id", "chart-area")
       .append("rect")
@@ -88,6 +92,7 @@ const GPXProfile_D3 = () => {
       .attr("width", width - margin.left - margin.right)
       .attr("height", height - margin.top - margin.bottom);
 
+    // Background rectangle
     svg.append('rect')
       .attr('x', margin.left)
       .attr('y', margin.top)
@@ -95,19 +100,22 @@ const GPXProfile_D3 = () => {
       .attr('height', height - margin.top - margin.bottom)
       .attr('fill', '#050111');
 
+    // Depth effect shadow
     svg.append('path')
       .datum(features)
       .attr('fill', '#898D8F')
       .attr('clip-path', 'url(#chart-area)')
       .attr('d', area)
-      .attr('transform', 'translate(6, -6)');
+      .attr('transform', 'translate(6, -6)'); // Offset slightly to the right and up
 
+    // Main graph fill
     svg.append('path')
       .datum(features)
       .attr('fill', '#6E7375')
       .attr('clip-path', 'url(#chart-area)')
       .attr('d', area);
 
+    // Main graph line
     svg.append('path')
       .datum(features)
       .attr('fill', 'none')
@@ -116,24 +124,62 @@ const GPXProfile_D3 = () => {
       .attr('clip-path', 'url(#chart-area)')
       .attr('d', area.lineY1());
 
+    // Axes
+    const maxDistance = d3.max(features, d => d.distanceFromStart);
+    const tickValues = x.ticks().concat(maxDistance);
+
     svg.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(x)
-        .tickValues(x.ticks().concat(d3.max(features, d => d.distanceFromStart)))
+        .tickValues(tickValues)
         .tickFormat(d => `${d.toFixed(2)} km`)
         .tickSizeOuter(0));
 
     svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)
       .call(d3.axisLeft(y));
+
+    /*******************************
+     * Adding Vertical Lines for Waypoints
+     *******************************/
+    console.log('Waypoint GeoJSON:', waypointGeoJSON);
+    if (waypointGeoJSON && waypointGeoJSON.features) {
+      waypointGeoJSON.features.forEach(feature => {
+        const { distanceFromStart } = feature.properties;
+
+        // Check if distanceFromStart exists and is a valid number
+        if (distanceFromStart == null || isNaN(distanceFromStart)) {
+          console.warn('Invalid distanceFromStart:', distanceFromStart);
+          return;
+        }
+
+        const xPosition = x(distanceFromStart);
+        console.log('Waypoint:', feature);
+        console.log('Waypoint Distance:', distanceFromStart);
+        console.log('X Position:', xPosition);
+
+        svg.append('line')
+          .attr('x1', xPosition)
+          .attr('y1', margin.top)
+          .attr('x2', xPosition)
+          .attr('y2', height - margin.bottom)
+          .attr('stroke', 'white')
+          .attr('stroke-width', 1)
+          .attr('clip-path', 'url(#chart-area)');
+      });
+    } else {
+      console.warn('No valid waypointGeoJSON.features found');
+    }
   };
 
   return (
-    <ChartWrapper>
-      <StyledChartContainer>
-        <svg ref={svgRef} style={{ width: '100%', height: '100%' }}></svg>
-      </StyledChartContainer>
-    </ChartWrapper>
+    <div>
+      <ChartWrapper>
+        <StyledChartContainer>
+          <svg ref={svgRef} style={{ width: '100%', height: '100%' }}></svg>
+        </StyledChartContainer>
+      </ChartWrapper>
+    </div>
   );
 };
 

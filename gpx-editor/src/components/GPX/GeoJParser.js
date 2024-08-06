@@ -39,7 +39,8 @@ export const createWaypointGeoJSON = (waypoints) => {
         properties: {
             name: wp.name,
             description: wp.description,
-            type: wp.type // Include the waypoint type in properties
+            type: wp.type,
+            distanceFromStart: wp.distanceFromStart // Include the distanceFromStart in properties
         }
     }));
 

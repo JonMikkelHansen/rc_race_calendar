@@ -370,7 +370,7 @@ export const WaypointEditor = () => {
               <StyledForm isActive={true} onSubmit={handleSubmit}>
                 <div className='span-3'>
                   <label htmlFor="name">Name</label>
-                  <FormInput id="name" type="text" defaultValue={waypoint.name} onChange={(e) => setName(e.target.value)} placeholder="Waypoint Name" />
+                  <FormInput id="name" type="text" defaultValue={waypoint.name} onChange={(e) => setName(e.target.value)} placeholder="Keypoint Name" />
                 </div>
                 <div className='span-2'>
                   <label htmlFor="name">Type</label>
