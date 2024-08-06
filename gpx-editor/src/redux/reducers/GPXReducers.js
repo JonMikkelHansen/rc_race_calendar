@@ -1,11 +1,14 @@
 import { 
   FETCH_RACES_SUCCESS, SELECT_RACE, SELECT_STAGE,
   SET_MINY, SET_MAXY, SET_TOLERANCE, SET_TENSION, 
-  SET_TRACKPOINTS, ADD_TRACKPOINT, UPDATE_TRACKPOINT, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT, SET_TRACKPOINT_GEOJSON, SET_WAYPOINT_GEOJSON, ADD_SEGMENT, EDIT_SEGMENT, DELETE_SEGMENT,
+  SET_TRACKPOINTS, ADD_TRACKPOINT, SET_WAYPOINTS, ADD_WAYPOINT, DELETE_WAYPOINT, UPDATE_WAYPOINT, SET_TRACKPOINT_GEOJSON, SET_WAYPOINT_GEOJSON, ADD_SEGMENT, EDIT_SEGMENT, DELETE_SEGMENT,
   SET_SHOW_TRACKPOINTS, SET_SHOW_WAYPOINTS, SET_SHOW_ANNOTATIONS,
   SET_STAGE_TITLE, // Import the new action type
-  SET_MINY_MANUAL, SET_MAXY_MANUAL, RESET_MINY_MAXY_MANUAL // Import newly added action types
+  SET_MINY_MANUAL, SET_MAXY_MANUAL, RESET_MINY_MAXY_MANUAL, // Import newly added action types
+  UPDATE_WAYPOINT_GEOJSON // Import new action type
 } from '../actions/GPXActions';
+
+import { createWaypointGeoJSON } from '../../components/GPX/GeoJParser'; // Import the function
 
 const initialState = {
   races: [],
@@ -56,21 +59,31 @@ const GPXReducer = (state = initialState, action) => {
       const newTrackpointsWithAdded = [...state.trackpoints, action.payload];
       const sortedTrackpointsWithAdded = newTrackpointsWithAdded.sort((a, b) => a.distanceFromStart - b.distanceFromStart);
       return { ...state, trackpoints: sortedTrackpointsWithAdded };
-    case 'UPDATE_TRACKPOINT': {
-      const updatedTrackpoints = state.trackpoints.map(tp => tp.id === action.payload.id ? action.payload : tp);
-      return { ...state, trackpoints: updatedTrackpoints };
-    }
     case SET_WAYPOINTS:
       return { ...state, waypoints: action.payload };
     case ADD_WAYPOINT:
       return { ...state, waypoints: [...state.waypoints, action.payload] };
     case DELETE_WAYPOINT:
-      return { ...state, waypoints: state.waypoints.filter(wp => wp.id !== action.payload) };
+      const filteredWaypoints = state.waypoints.filter(wp => wp.id !== action.payload);
+      const newWaypointGeoJSONAfterDelete = createWaypointGeoJSON(filteredWaypoints);
+      return { 
+        ...state, 
+        waypoints: filteredWaypoints,
+        waypointGeoJSON: newWaypointGeoJSONAfterDelete 
+      };
     case UPDATE_WAYPOINT:
-      return { ...state, waypoints: state.waypoints.map(wp => wp.id === action.payload.id ? action.payload : wp) };
+      const updatedWaypoints = state.waypoints.map(wp => wp.id === action.payload.id ? action.payload : wp);
+      const newWaypointGeoJSONAfterUpdate = createWaypointGeoJSON(updatedWaypoints);
+      return { 
+        ...state, 
+        waypoints: updatedWaypoints,
+        waypointGeoJSON: newWaypointGeoJSONAfterUpdate 
+      };
     case SET_TRACKPOINT_GEOJSON:
       return { ...state, trackpointGeoJSON: action.payload };
     case SET_WAYPOINT_GEOJSON:
+      return { ...state, waypointGeoJSON: action.payload };
+    case UPDATE_WAYPOINT_GEOJSON:
       return { ...state, waypointGeoJSON: action.payload };
     case ADD_SEGMENT:
       return { ...state, segments: [...state.segments, action.payload] };

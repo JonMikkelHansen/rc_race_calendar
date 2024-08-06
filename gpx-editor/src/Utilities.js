@@ -72,8 +72,6 @@ export function douglasPeucker(points, tolerance) {
   }
 }
 
-
-
 /**
  * Calculates the perpendicular distance from a point to a line segment.
  * @param point {Object} Point object with latitude and longitude properties.
@@ -126,14 +124,13 @@ export function perpendicularDistance(point, line) {
   }
 }
 
-
 /**
  * Interpolates lat, lon, and elevation for a given distance from start, based on surrounding trackpoints.
  * @param {number} distance - The distance from the start for which to interpolate the trackpoint data.
  * @param {Array} trackpoints - An array of trackpoints, each with lat, lon, distanceFromStart, and elevation properties.
  * @return {Object} An object containing interpolated lat, lon, and elevation values.
  */
-const interpolateTrackpointData = (distance, trackpoints) => {
+export const interpolateTrackpointData = (distance, trackpoints) => {
   if (!trackpoints.length) {
     console.log("Interpolation called with empty trackpoints array.");
     return null; // Guard clause for empty trackpoints array
@@ -198,13 +195,6 @@ const interpolateTrackpointData = (distance, trackpoints) => {
   };
 };
 
-
-export { interpolateTrackpointData };
-
-// Additional utility functions can be added as needed
-
-
-
 /**
  * Formats a date string into a more readable format with a day suffix.
  * @param {string} dateString - The date string to format.
@@ -218,13 +208,17 @@ export function formatDate(dateString) {
   let daySuffix;
 
   switch (day) {
-    case 1: case 21: case 31:
+    case 1:
+    case 21:
+    case 31:
       daySuffix = 'st';
       break;
-    case 2: case 22:
+    case 2:
+    case 22:
       daySuffix = 'nd';
       break;
-    case 3: case 23:
+    case 3:
+    case 23:
       daySuffix = 'rd';
       break;
     default:

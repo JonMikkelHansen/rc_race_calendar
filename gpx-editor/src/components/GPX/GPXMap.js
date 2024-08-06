@@ -7,6 +7,7 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoiam9uaGFuc2VuIiwiYSI6ImNrdXF0cTBsazA2emkyb3A1Y
 
 const GPXMap = () => {
     const mapContainerRef = useRef(null);
+    const mapRef = useRef(null); // Reference to the map instance
     const trackpointGeoJSON = useSelector((state) => state.trackpointGeoJSON);
     const waypointGeoJSON = useSelector((state) => state.waypointGeoJSON);
 
@@ -19,6 +20,8 @@ const GPXMap = () => {
             pitch: 40, // Set the initial pitch
             bearing: 0, // Set the initial bearing to face north
         });
+
+        mapRef.current = map;
 
         map.on('load', () => {
             // Enable 3D terrain
@@ -36,7 +39,6 @@ const GPXMap = () => {
             });
 
             if (trackpointGeoJSON && trackpointGeoJSON.features && trackpointGeoJSON.features.length > 0) {
-                // Shadow layer
                 const shadowGeoJSON = JSON.parse(JSON.stringify(trackpointGeoJSON)); // Deep clone to avoid mutating the original
                 shadowGeoJSON.features = shadowGeoJSON.features.map(feature => ({
                     ...feature,
@@ -46,7 +48,6 @@ const GPXMap = () => {
                     }
                 }));
 
-                // Adding the shadow layer
                 map.addSource('track-shadow', { type: 'geojson', data: shadowGeoJSON });
                 map.addLayer({
                     id: 'track-shadow',
@@ -63,7 +64,6 @@ const GPXMap = () => {
                     },
                 });
 
-                // Main track layer
                 map.addSource('track', { type: 'geojson', data: trackpointGeoJSON });
                 map.addLayer({
                     id: 'track',
@@ -90,10 +90,9 @@ const GPXMap = () => {
                 map.setPitch(40); // Ensure the pitch is set after fitting bounds
             }
 
-            // Waypoints layer
+            // Add waypoints if available
             if (waypointGeoJSON && waypointGeoJSON.features && waypointGeoJSON.features.length > 0) {
                 map.addSource('waypoints', { type: 'geojson', data: waypointGeoJSON });
-
                 map.addLayer({
                     id: 'waypoints',
                     type: 'circle',
@@ -133,9 +132,49 @@ const GPXMap = () => {
             map.remove();
             resizeObserver.disconnect();
         };
-    }, [trackpointGeoJSON, waypointGeoJSON]);
+    }, [trackpointGeoJSON]);
 
-    return <div ref={mapContainerRef} style={{ width: '100%', height: '0', paddingBottom: '56.25%', position: 'relative' }} />;
+    // Handle updates to the waypointGeoJSON data
+    useEffect(() => {
+        const map = mapRef.current;
+
+        if (map && map.isStyleLoaded()) {
+            if (map.getSource('waypoints')) {
+                map.getSource('waypoints').setData(waypointGeoJSON);
+            } else {
+                map.addSource('waypoints', { type: 'geojson', data: waypointGeoJSON });
+                map.addLayer({
+                    id: 'waypoints',
+                    type: 'circle',
+                    source: 'waypoints',
+                    paint: {
+                        'circle-radius': 5,
+                        'circle-color': '#FFFFFF'
+                    }
+                });
+
+                map.addLayer({
+                    id: 'waypoint-labels',
+                    type: 'symbol',
+                    source: 'waypoints',
+                    layout: {
+                        'text-field': ['get', 'name'],
+                        'text-size': 16,
+                        'text-font': ['Arial Unicode MS Bold'],
+                        'text-anchor': 'top',
+                        'text-offset': [0, 1.5],
+                        'symbol-placement': 'point'
+                    },
+                    paint: {
+                        'text-color': '#FFFFFF',
+                        'text-halo-color': 'rgba(0, 0, 0, 0)' // Remove the dark outline
+                    }
+                });
+            }
+        }
+    }, [waypointGeoJSON]);
+
+    return <div ref={mapContainerRef} style={{ width: '100%', height: '500px' }} />;
 };
 
 export default GPXMap;

@@ -1,4 +1,3 @@
-// WaypointEditor.js
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSelector, useDispatch } from 'react-redux';
@@ -31,7 +30,7 @@ const EditForm = styled.form`
 
 const WaypointInfo = styled.div`
   justify-content: space-between; 
-  alignItems: center;
+  align-items: center;
   width: 100%;
   display: ${props => props.isActive ? 'none' : 'flex'};
 `;
@@ -193,7 +192,7 @@ export const WaypointEditor = () => {
     return a.distanceFromStart - b.distanceFromStart;
   }));
 
-  const trackpoints = useSelector((state: { trackpoints: any }) => state.trackpoints);
+  const trackpoints = useSelector((state) => state.trackpoints);
   const minYManual = useSelector(state => state.minYManual);
   const maxYManual = useSelector(state => state.maxYManual);
   const dispatch = useDispatch();
