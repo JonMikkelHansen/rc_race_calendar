@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { useSelector } from 'react-redux';
 import { calculateHaversineDistance } from '../../Utilities.js';
-import GPXChartControls from './GPXChartControls.js';
 import styled from 'styled-components';
 
 const ChartWrapper = styled.div`
@@ -19,13 +18,6 @@ const StyledChartContainer = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-`;
-
-const ControlsWrapper = styled.div`
-  padding-top: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 `;
 
 const GPXProfile_D3 = () => {
@@ -146,6 +138,7 @@ const GPXProfile_D3 = () => {
     if (waypointGeoJSON && waypointGeoJSON.features) {
       waypointGeoJSON.features.forEach(feature => {
         const { distanceFromStart } = feature.properties;
+        const [lon, lat, elevation] = feature.geometry.coordinates;
 
         // Check if distanceFromStart exists and is a valid number
         if (distanceFromStart == null || isNaN(distanceFromStart)) {
@@ -154,13 +147,16 @@ const GPXProfile_D3 = () => {
         }
 
         const xPosition = x(distanceFromStart);
+        const yPosition = y(elevation);
         console.log('Waypoint:', feature);
         console.log('Waypoint Distance:', distanceFromStart);
         console.log('X Position:', xPosition);
+        console.log('Elevation:', elevation);
+        console.log('Y Position:', yPosition);
 
         svg.append('line')
           .attr('x1', xPosition)
-          .attr('y1', margin.top)
+          .attr('y1', y(elevation))
           .attr('x2', xPosition)
           .attr('y2', height - margin.bottom)
           .attr('stroke', 'white')
