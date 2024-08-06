@@ -2,8 +2,25 @@ import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useSelector } from 'react-redux';
+import styled from 'styled-components';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9uaGFuc2VuIiwiYSI6ImNrdXF0cTBsazA2emkyb3A1YTQ4YmlyaXQifQ.FErbZ3mNRznm2BEDfpla_A';
+
+const MapContainer = styled.div`
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  position: relative;
+  overflow: hidden;
+`;
+
+const StyledMap = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+`;
 
 const GPXMap = () => {
     const mapContainerRef = useRef(null);
@@ -174,7 +191,11 @@ const GPXMap = () => {
         }
     }, [waypointGeoJSON]);
 
-    return <div ref={mapContainerRef} style={{ width: '100%', height: '500px' }} />;
+    return (
+        <MapContainer>
+            <StyledMap ref={mapContainerRef} />
+        </MapContainer>
+    );
 };
 
 export default GPXMap;

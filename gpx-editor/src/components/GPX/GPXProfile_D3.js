@@ -92,14 +92,6 @@ const GPXProfile_D3 = () => {
       .attr('height', height - margin.top - margin.bottom)
       .attr('fill', '#050111');
 
-    // Depth effect shadow
-    svg.append('path')
-      .datum(features)
-      .attr('fill', '#898D8F')
-      .attr('clip-path', 'url(#chart-area)')
-      .attr('d', area)
-      .attr('transform', 'translate(6, -6)'); // Offset slightly to the right and up
-
     // Main graph fill
     svg.append('path')
       .datum(features)
@@ -132,7 +124,7 @@ const GPXProfile_D3 = () => {
       .call(d3.axisLeft(y));
 
     /*******************************
-     * Adding Vertical Lines for Waypoints
+     * Adding Dotted Vertical Lines and Top Dots for Waypoints
      *******************************/
     console.log('Waypoint GeoJSON:', waypointGeoJSON);
     if (waypointGeoJSON && waypointGeoJSON.features) {
@@ -161,6 +153,14 @@ const GPXProfile_D3 = () => {
           .attr('y2', height - margin.bottom)
           .attr('stroke', 'white')
           .attr('stroke-width', 1)
+          .attr('stroke-dasharray', '4,2') // Dotted line
+          .attr('clip-path', 'url(#chart-area)');
+
+        svg.append('circle')
+          .attr('cx', xPosition)
+          .attr('cy', yPosition)
+          .attr('r', 2)
+          .attr('fill', 'white')
           .attr('clip-path', 'url(#chart-area)');
       });
     } else {
