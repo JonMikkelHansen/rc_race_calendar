@@ -22,6 +22,16 @@ const StyledMap = styled.div`
   height: 100%;
 `;
 
+// CSS to hide the Mapbox logo
+const GlobalStyle = styled.div`
+  .mapboxgl-ctrl-attrib {
+    display: none !important;
+  }
+  .mapboxgl-ctrl-logo {
+    display: none !important;
+  }
+`;
+
 const GPXMap = () => {
     const mapContainerRef = useRef(null);
     const mapRef = useRef(null); // Reference to the map instance
@@ -36,6 +46,7 @@ const GPXMap = () => {
             zoom: 2,
             pitch: 40, // Set the initial pitch
             bearing: 0, // Set the initial bearing to face north
+            attributionControl: false // Disable the default attribution control
         });
 
         mapRef.current = map;

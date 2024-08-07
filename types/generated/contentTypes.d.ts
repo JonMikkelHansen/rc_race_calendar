@@ -962,6 +962,37 @@ export interface ApiRaceRace extends Schema.CollectionType {
   };
 }
 
+export interface ApiRiderRider extends Schema.CollectionType {
+  collectionName: 'riders';
+  info: {
+    singularName: 'rider';
+    pluralName: 'riders';
+    displayName: 'Rider';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    Firstname: Attribute.String;
+    Lastname: Attribute.String;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::rider.rider',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::rider.rider',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiSeriesSeries extends Schema.CollectionType {
   collectionName: 'serieses';
   info: {
@@ -1094,6 +1125,7 @@ declare module '@strapi/types' {
       'plugin::i18n.locale': PluginI18NLocale;
       'api::leaderboard.leaderboard': ApiLeaderboardLeaderboard;
       'api::race.race': ApiRaceRace;
+      'api::rider.rider': ApiRiderRider;
       'api::series.series': ApiSeriesSeries;
       'api::stage.stage': ApiStageStage;
     }

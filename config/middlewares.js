@@ -9,8 +9,12 @@ module.exports = [
   'strapi::session',
   'strapi::favicon',
   'strapi::public',
+  // Add custom static file middleware
+  {
+    name: 'custom::static-files',
+    config: {
+      publicPath: '/video-metadata',
+      directory: 'video-metadata',
+    },
+  },
 ];
-
-
-
-
