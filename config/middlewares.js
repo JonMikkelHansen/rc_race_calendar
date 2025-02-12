@@ -12,16 +12,9 @@ module.exports = [
     name: 'strapi::public',
     config: {
       enabled: true,
-      path: './public',  // serves files from the public directory
+      path: './public',
       defaultIndex: false,
+      directory: './video-metadata'  // This will serve files from public/video-metadata
     }
-  },
-  {
-    name: 'custom::static-files',
-    config: {
-      enabled: true,
-      publicPath: '/video-metadata',
-      directory: 'video-metadata',
-    },
-  },
+  }
 ];
