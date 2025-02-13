@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchRacesAsync, selectRace, selectStage } from '../redux/actions/GPXActions.js'; // Ensure these actions are imported
-import { formatDate } from '../Utilities.js'; // Ensure this utility function is correctly imported
+import { fetchRacesAsync, selectRace, selectStage } from '../redux/actions/GPXActions.js';
+import { formatDate } from '../Utilities.js';
 
 // Styled components
 const MonthHeading = styled.h3`
-  font-family: Libre Franklin, sans-serif; // Example font, adjust as needed
-  font-size: 1rem; // Example font size, adjust as needed
-  font-weight: bold; // Bold font weight for headings
-  color: #333; // Example color, adjust as needed
+  font-family: Libre Franklin, sans-serif;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
   margin-bottom: .5rem
 `;
 
@@ -20,11 +20,11 @@ const List = styled.ul`
 `;
 
 const ListItem = styled.li`
-  font-family: Libre Franklin, sans-serif; // Example font, adjust as needed
-  font-size: .8rem; // Example font size, adjust as needed
+  font-family: Libre Franklin, sans-serif;
+  font-size: .8rem;
   cursor: pointer;
   &:hover {
-    background-color: #f0f0f0; // Light grey on hover, adjust color as needed
+    background-color: #f0f0f0;
   }
 `;
 
@@ -32,10 +32,10 @@ const ExpandButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.8rem; // Smaller font size for a modern look
+  font-size: 0.8rem;
   padding: 0;
-  margin-right: 8px; // Add some space between the arrow and text
-  display: inline-flex; // Align better with the text
+  margin-right: 8px;
+  display: inline-flex;
   align-items: center;
 `;
 
@@ -47,7 +47,7 @@ function RaceList() {
   const dispatch = useDispatch();
   const races = useSelector((state) => state.races) || [];
   const selectedRace = useSelector((state) => state.selectedRace);
-  const [selectedSeason, setSelectedSeason] = useState(new Date().getFullYear());
+  const [selectedSeason, setSelectedSeason] = useState(2024);
   const [expandedRaces, setExpandedRaces] = useState([]);
 
   useEffect(() => {
@@ -55,28 +55,19 @@ function RaceList() {
     dispatch(fetchRacesAsync(selectedSeason.toString()));
   }, [dispatch, selectedSeason]);
 
-  console.log('Current races from state:', races); // Add this to see what's in the state
+  console.log('Current races from state:', races);
 
   const handleRaceSelect = (raceId) => {
     dispatch(selectRace(raceId));
   };
 
   const handleStageSelect = (stageId, event) => {
-    event.stopPropagation(); // Prevent the race's onClick from firing
+    event.stopPropagation();
     dispatch(selectStage(stageId));
   };
 
   const handleSeasonChange = (e) => {
     setSelectedSeason(Number(e.target.value));
-  };
-
-  const toggleExpandRace = (raceId) => {
-    handleRaceSelect(raceId); // Select the race
-    setExpandedRaces(prevExpanded => 
-      prevExpanded.includes(raceId)
-        ? prevExpanded.filter(id => id !== raceId)
-        : [...prevExpanded, raceId]
-    );
   };
 
   // Utility function to group races by their start month
@@ -102,7 +93,7 @@ function RaceList() {
       <select id="season-select" value={selectedSeason} onChange={handleSeasonChange}>
         <option value={2023}>2023</option>
         <option value={2024}>2024</option>
-        <option value={2025}>2025</option> {/* Example of adding another year */}
+        <option value={2025}>2025</option>
       </select>
   
       {Object.entries(groupedRaces).length > 0 ? (
@@ -112,7 +103,7 @@ function RaceList() {
             {monthRaces.map((race) => (
               <div key={race.id}>
                 <div 
-                  onClick={() => toggleExpandRace(race.id)}
+                  onClick={() => handleRaceSelect(race.id)}
                   style={{ 
                     cursor: 'pointer',
                     padding: '8px',
@@ -121,11 +112,10 @@ function RaceList() {
                     border: race.id === selectedRace ? '2px solid #007bff' : '1px solid #ddd'
                   }}
                 >
-                  {race.race_name} ({new Date(race.race_start_date).toLocaleDateString()})
-                  {race.stages?.length > 0 && ` - ${race.stages.length} stages`}
+                  {race.race_name} ({formatDate(race.race_start_date)})
                 </div>
                 
-                {expandedRaces.includes(race.id) && race.stages && (
+                {race.stages && race.stages.length > 0 && (
                   <div style={{ marginLeft: '20px', marginBottom: '8px' }}>
                     {race.stages.map((stage) => (
                       <div 
@@ -140,7 +130,7 @@ function RaceList() {
                         }}
                       >
                         Stage {stage.stage_number}: {stage.stage_name}
-                        {stage.stage_date && ` (${new Date(stage.stage_date).toLocaleDateString()})`}
+                        {stage.stage_date && ` (${formatDate(stage.stage_date)})`}
                       </div>
                     ))}
                   </div>
