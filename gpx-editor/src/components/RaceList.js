@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchRacesAsync, selectRace, selectStage } from '../redux/actions/GPXActions'; // Ensure these actions are imported
-import { formatDate } from '../Utilities'; // Ensure this utility function is correctly imported
+import { fetchRacesAsync, selectRace, selectStage } from '../redux/actions/GPXActions.js'; // Ensure these actions are imported
+import { formatDate } from '../Utilities.js'; // Ensure this utility function is correctly imported
 
 // Styled components
 const MonthHeading = styled.h3`
@@ -46,12 +46,16 @@ const RaceName = styled.span`
 function RaceList() {
   const dispatch = useDispatch();
   const races = useSelector((state) => state.races) || [];
+  const selectedRace = useSelector((state) => state.selectedRace);
   const [selectedSeason, setSelectedSeason] = useState(new Date().getFullYear());
   const [expandedRaces, setExpandedRaces] = useState([]);
 
   useEffect(() => {
+    console.log('Fetching races for season:', selectedSeason);
     dispatch(fetchRacesAsync(selectedSeason.toString()));
   }, [dispatch, selectedSeason]);
+
+  console.log('Current races from state:', races); // Add this to see what's in the state
 
   const handleRaceSelect = (raceId) => {
     dispatch(selectRace(raceId));
@@ -67,11 +71,12 @@ function RaceList() {
   };
 
   const toggleExpandRace = (raceId) => {
-    if (expandedRaces.includes(raceId)) {
-      setExpandedRaces(expandedRaces.filter((id) => id !== raceId));
-    } else {
-      setExpandedRaces([...expandedRaces, raceId]);
-    }
+    handleRaceSelect(raceId); // Select the race
+    setExpandedRaces(prevExpanded => 
+      prevExpanded.includes(raceId)
+        ? prevExpanded.filter(id => id !== raceId)
+        : [...prevExpanded, raceId]
+    );
   };
 
   // Utility function to group races by their start month
@@ -101,35 +106,47 @@ function RaceList() {
       </select>
   
       {Object.entries(groupedRaces).length > 0 ? (
-        Object.entries(groupedRaces).map(([month, races]) => (
+        Object.entries(groupedRaces).map(([month, monthRaces]) => (
           <div key={month}>
-            <MonthHeading>{month}</MonthHeading>
-            <List>
-              {races.map((race) => (
-                <ListItem key={race.id} onClick={() => handleRaceSelect(race.id)}>
-                  <ExpandButton onClick={(e) => {
-                    e.stopPropagation(); // Prevent race selection when toggling details
-                    toggleExpandRace(race.id);
-                  }}>
-                    {expandedRaces.includes(race.id) ? '▼' : '►'}
-                  </ExpandButton>
-                  <RaceName>
-                    {formatDate(race.race_start_date)} - {race.race_name}
-                    {race.stages && race.stages.length > 0 && ` (${race.stages.length} Stages)`}
-                  </RaceName>
-                  {expandedRaces.includes(race.id) && (
-                    <ul>
-                      {race.stages && race.stages.map(stage => (
-                        <li key={stage.id} onClick={(e) => {
-                          e.stopPropagation(); // Prevent race selection
-                          handleStageSelect(stage.id);
-                        }}>{stage.name}</li>
-                      ))}
-                    </ul>
-                  )}
-                </ListItem>
-              ))}
-            </List>
+            <h3>{month}</h3>
+            {monthRaces.map((race) => (
+              <div key={race.id}>
+                <div 
+                  onClick={() => toggleExpandRace(race.id)}
+                  style={{ 
+                    cursor: 'pointer',
+                    padding: '8px',
+                    backgroundColor: '#f5f5f5',
+                    marginBottom: '4px',
+                    border: race.id === selectedRace ? '2px solid #007bff' : '1px solid #ddd'
+                  }}
+                >
+                  {race.race_name} ({new Date(race.race_start_date).toLocaleDateString()})
+                  {race.stages?.length > 0 && ` - ${race.stages.length} stages`}
+                </div>
+                
+                {expandedRaces.includes(race.id) && race.stages && (
+                  <div style={{ marginLeft: '20px', marginBottom: '8px' }}>
+                    {race.stages.map((stage) => (
+                      <div 
+                        key={stage.id}
+                        onClick={(e) => handleStageSelect(stage.id, e)}
+                        style={{ 
+                          cursor: 'pointer',
+                          padding: '4px',
+                          margin: '2px 0',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e0e0e0'
+                        }}
+                      >
+                        Stage {stage.stage_number}: {stage.stage_name}
+                        {stage.stage_date && ` (${new Date(stage.stage_date).toLocaleDateString()})`}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         ))
       ) : (
@@ -137,7 +154,6 @@ function RaceList() {
       )}
     </div>
   );
-  
 }
 
 export default RaceList;
