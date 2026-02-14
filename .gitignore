@@ -1,6 +1,25 @@
-node_modules
-build
-.cache
-.tmp
+
+# Local env
 .env
+
+# Dumps / backups
+*.dump
+*.sql
+
+# Node
+node_modules
+.cache
+build
+
+# Strapi
+.tmp
+
 *.log
+
+# Strapi build artifacts
+.strapi
+.strapi-updater.json
+types/generated
+
+# Local installers
+*.exe

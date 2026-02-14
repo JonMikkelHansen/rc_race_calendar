@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16
+    container_name: rc-postgres
+    environment:
+      POSTGRES_DB: rc_race_calendar
+      POSTGRES_USER: strapi
+      POSTGRES_PASSWORD: strapi
+    ports:
+      - "5432:5432"
+    volumes:
+      - rc_pgdata:/var/lib/postgresql/data
+
+  strapi:
+    build: .
+    container_name: rc-strapi
+    depends_on:
+      - db
+    environment:
+      HOST: 0.0.0.0
+      PORT: 1337
+
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: rc_race_calendar
+      DATABASE_USERNAME: strapi
+      DATABASE_PASSWORD: strapi
+      DATABASE_SSL: "false"
+
+      # Strapi secrets (OK for dev; later we’ll set these on Sliplane)
+      APP_KEYS: someKey1,someKey2,someKey3,someKey4
+      API_TOKEN_SALT: someRandomSalt
+      ADMIN_JWT_SECRET: someAdminJwtSecret
+      JWT_SECRET: someJwtSecret
+    ports:
+      - "1337:1337"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+
+volumes:
+  rc_pgdata:
